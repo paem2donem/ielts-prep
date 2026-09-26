@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#090d16">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>ForenSync Academy - IELTS & Cyber Prep Suite</title>
+  <title>ForenSync Academy - IELTS 7.5+ & Jean Monnet Prep Suite</title>
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -23,16 +23,23 @@
         <div class="brand-icon">🛡️</div>
         <div>
           <div class="brand-title">ForenSync Academy</div>
-          <div class="brand-subtitle">IELTS 7.5+ & Jean Monnet Prep</div>
+          <div class="brand-subtitle">IELTS 7.5+ & Cyber Prep</div>
         </div>
+      </div>
+
+      <!-- User Profile Pill -->
+      <div id="user-profile-pill" class="user-pill" title="Kullanıcı Profilini Değiştir / Giriş Yap">
+        <div id="user-display-avatar" class="user-avatar">P</div>
+        <span id="user-display-email" style="color: #cbd5e1; font-weight: 500;">paem2.donem@gmail.com</span>
+        <span style="font-size: 0.7rem; color: var(--accent-cyan);">▼</span>
       </div>
 
       <!-- Mode Toggle Switcher -->
       <div class="mode-toggle-group">
-        <button id="btn-mode-cyber" class="mode-btn active" title="Europol & Jean Monnet Cyber Forensics Focus">
+        <button id="btn-mode-cyber" class="mode-btn active" title="Europol EC3 ve Jean Monnet Siber Güvenlik Modu">
           <span>⚡</span> Cyber Mode
         </button>
-        <button id="btn-mode-academic" class="mode-btn" title="General Cambridge IELTS Academic Focus">
+        <button id="btn-mode-academic" class="mode-btn" title="Genel Cambridge IELTS Academic Modu">
           <span>🎓</span> Academic Mode
         </button>
       </div>
@@ -43,10 +50,29 @@
         <button class="nav-item" data-module-target="speaking">🎙️ Speaking</button>
         <button class="nav-item" data-module-target="reading">📖 Reading</button>
         <button class="nav-item" data-module-target="listening">🎧 Listening</button>
+        <button class="nav-item" data-module-target="tricks">💡 Taktikler & Hileler</button>
+        <button class="nav-item" data-module-target="mistakes">❌ Yanlış Defteri</button>
         <button class="nav-item" data-module-target="mentor">🧠 AI Mentor</button>
       </nav>
     </div>
   </header>
+
+  <!-- Login Modal Popup -->
+  <div id="modal-login" class="modal-overlay">
+    <div class="modal-box">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h3 style="color: var(--accent-cyan); font-size: 1.2rem;">👤 Aday Girişi / Profil</h3>
+        <button id="btn-close-login" style="background: transparent; border: none; color: var(--text-dim); font-size: 1.2rem; cursor: pointer;">✕</button>
+      </div>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">
+        Çözdüğünüz tüm testlerin, yanlışlarınızın ve yapay zeka gelişim analizinizin size özel kaydedilmesi için Gmail adresinizi girin:
+      </p>
+      <input type="email" id="login-email-input" class="input-fill" style="width: 100%; margin-bottom: 16px;" placeholder="ornek.aday@gmail.com">
+      <button id="btn-save-login" class="btn btn-primary" style="width: 100%;">
+        ✅ Profilime Bağlan & Kaydet
+      </button>
+    </div>
+  </div>
 
   <!-- Main Viewports -->
   <main class="main-content">
@@ -57,14 +83,17 @@
         <div class="card-title">
           <div style="display: flex; align-items: center; gap: 10px;">
             <span>✍️</span> IELTS Writing Studio
-            <div style="display: flex; gap: 6px; margin-left: 12px;">
-              <button id="btn-writing-task1" class="btn btn-outline" style="padding: 4px 12px; min-height: 32px; font-size: 0.8rem;">Task 1 (150w)</button>
-              <button id="btn-writing-task2" class="btn btn-outline active" style="padding: 4px 12px; min-height: 32px; font-size: 0.8rem; background: rgba(56, 189, 248, 0.2); border-color: var(--accent-cyan); color: var(--accent-cyan);">Task 2 (250w)</button>
+            <div style="display: flex; gap: 6px; margin-left: 8px;">
+              <button id="btn-writing-task1" class="btn btn-outline" style="padding: 4px 10px; min-height: 30px; font-size: 0.78rem;">Task 1 (150w)</button>
+              <button id="btn-writing-task2" class="btn btn-outline active" style="padding: 4px 10px; min-height: 30px; font-size: 0.78rem; background: rgba(56, 189, 248, 0.2); border-color: var(--accent-cyan); color: var(--accent-cyan);">Task 2 (250w)</button>
             </div>
           </div>
-          <div style="display: flex; align-items: center; gap: 10px;">
-            <span id="timer-display-writing" style="font-family: var(--font-mono); font-weight: 700; color: var(--accent-cyan); font-size: 1.1rem;">60:00</span>
-            <button id="btn-timer-writing" class="btn btn-outline" style="padding: 4px 10px; min-height: 32px; font-size: 0.8rem;">▶ Start Timer</button>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <button id="btn-generate-ai-writing" class="btn btn-ai-magic" style="padding: 4px 12px; min-height: 32px; font-size: 0.8rem;">
+              ✨ Yeni Görev Üret
+            </button>
+            <span id="timer-display-writing" style="font-family: var(--font-mono); font-weight: 700; color: var(--accent-cyan); font-size: 1.05rem;">60:00</span>
+            <button id="btn-timer-writing" class="btn btn-outline" style="padding: 4px 8px; min-height: 30px; font-size: 0.78rem;">▶ Başlat</button>
           </div>
         </div>
 
@@ -75,18 +104,18 @@
 
         <div class="writing-layout">
           <div>
-            <textarea id="essay-input" class="essay-editor" placeholder="Type your academic essay here... (Live word counter tracks your progress)"></textarea>
+            <textarea id="essay-input" class="essay-editor" placeholder="Kompozisyonunuzu buraya yazın... (Canlı kelime sayacı ilerlemenizi takip eder)"></textarea>
             <div class="word-count-bar">
               <span id="writing-word-count" style="font-weight: 600; color: var(--text-muted);">0 / 250 words</span>
-              <span style="color: var(--text-dim); font-size: 0.8rem;">Autosaved locally</span>
+              <span style="color: var(--text-dim); font-size: 0.8rem;">Otomatik profilinize kaydedilir</span>
             </div>
             <button id="btn-submit-writing" class="btn btn-primary" style="width: 100%;">
-              🚀 Submit to AI Examiner
+              🚀 Kompozisyonu Değerlendir (AI Examiner)
             </button>
           </div>
           <div id="writing-feedback-area">
             <div class="card" style="text-align: center; color: var(--text-dim); padding: 40px 20px;">
-              Your Cambridge/Jean Monnet examiner report will appear here upon submission.
+              Cambridge / Jean Monnet Baş Examiner raporunuz değerlendirme sonrası burada gösterilecektir.
             </div>
           </div>
         </div>
@@ -98,9 +127,9 @@
       <div class="card">
         <div class="card-title">
           <div><span>🎙️</span> IELTS Speaking Booth</div>
-          <div class="badge badge-purple">Multimodal Voice AI</div>
+          <div class="badge badge-purple">Çok Modlu Ses Yapay Zekası</div>
         </div>
-        <div class="card-desc">Practice Part 2 Cue Cards with live preparation countdown and microphone speech analysis.</div>
+        <div class="card-desc">Part 2 Cue Card formatında konuşmanızı mikrofona kaydedin; yapay zeka sesinizi dinleyip telaffuz, akıcılık ve kelime analizi yapsın.</div>
 
         <div class="writing-layout">
           <div>
@@ -111,33 +140,33 @@
             <!-- Prep Timer -->
             <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: rgba(0,0,0,0.25); border-radius: var(--radius-sm); margin-bottom: 20px;">
               <div>
-                <div style="font-size: 0.8rem; color: var(--text-dim); text-transform: uppercase;">1-Minute Candidate Preparation</div>
+                <div style="font-size: 0.8rem; color: var(--text-dim); text-transform: uppercase;">1 Dakikalık Aday Hazırlık Süresi</div>
                 <div id="speaking-prep-display" style="font-family: var(--font-mono); font-size: 1.3rem; font-weight: 700; color: var(--accent-cyan);">01:00</div>
               </div>
-              <button id="btn-speaking-prep-timer" class="btn btn-outline" style="min-height: 36px; padding: 6px 14px;">▶ Start Prep Timer</button>
+              <button id="btn-speaking-prep-timer" class="btn btn-outline" style="min-height: 36px; padding: 6px 14px;">▶ Süreyi Başlat</button>
             </div>
 
             <!-- Audio Recording Pod -->
             <div class="recording-pod">
-              <button id="btn-record-speaking" class="record-circle-btn" title="Click to Record">
+              <button id="btn-record-speaking" class="record-circle-btn" title="Kayıt İçin Tıklayın">
                 🎙️
               </button>
               <div id="speaking-record-time" style="font-family: var(--font-mono); font-size: 1.4rem; font-weight: 700; margin-bottom: 8px;">00:00</div>
               <div style="font-size: 0.85rem; color: var(--text-muted); max-width: 320px;">
-                Tap the microphone button to start speaking. Speak clearly for 1 to 2 minutes. Tap again to stop.
+                Kırmızı butona basarak konuşmaya başlayın. 1 - 2 dakika boyunca akıcı ve net konuşun. Bitirmek için tekrar basın.
               </div>
 
               <audio id="speaking-audio-preview" controls style="display: none; margin-top: 16px; width: 100%; max-width: 340px;"></audio>
             </div>
 
             <button id="btn-submit-speaking" class="btn btn-primary" style="width: 100%;" disabled>
-              🎧 Submit Recording to AI Examiner
+              🎧 Ses Kaydını Gönder & Puanla
             </button>
           </div>
 
           <div id="speaking-feedback-area">
             <div class="card" style="text-align: center; color: var(--text-dim); padding: 40px 20px;">
-              Your spoken transcript, pronunciation evaluation, and Band Score will be presented here.
+              Konuşmanızın tam İngilizce transkripti, telaffuz hataları ve Band Skoru analizi burada yer alacaktır.
             </div>
           </div>
         </div>
@@ -148,18 +177,23 @@
     <section id="panel-reading" class="panel-view">
       <div class="card">
         <div class="card-title">
-          <div><span>📖</span> Academic Reading Arena</div>
           <div style="display: flex; align-items: center; gap: 10px;">
-            <span id="timer-display-reading" style="font-family: var(--font-mono); font-weight: 700; color: var(--accent-cyan); font-size: 1.1rem;">60:00</span>
-            <button id="btn-timer-reading" class="btn btn-outline" style="padding: 4px 10px; min-height: 32px; font-size: 0.8rem;">▶ Start Timer</button>
+            <span>📖</span> Academic Reading Arena
+            <button id="btn-generate-ai-reading" class="btn btn-ai-magic" style="padding: 4px 12px; min-height: 32px; font-size: 0.8rem;">
+              ✨ Yapay Zeka ile Yeni Pasaj Üret
+            </button>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span id="timer-display-reading" style="font-family: var(--font-mono); font-weight: 700; color: var(--accent-cyan); font-size: 1.05rem;">60:00</span>
+            <button id="btn-timer-reading" class="btn btn-outline" style="padding: 4px 8px; min-height: 30px; font-size: 0.78rem;">▶ Başlat</button>
           </div>
         </div>
-        <div class="card-desc">Authentic Cambridge IELTS Reading Passages with instant automated grading and answer explanations.</div>
+        <div class="card-desc">C1-C2 Akademik seviyede True/False/Not Given soruları. Yanlış yaptığınız sorular otomatik olarak "Yanlış Defterinize" kaydedilir.</div>
 
         <!-- Mobile View Switcher for Reading -->
         <div class="mobile-reading-toggle">
-          <button id="mobile-toggle-passage" class="btn btn-outline active" style="flex:1;">📄 Passage</button>
-          <button id="mobile-toggle-questions" class="btn btn-outline" style="flex:1;">📝 Questions</button>
+          <button id="mobile-toggle-passage" class="btn btn-outline active" style="flex:1;">📄 Metin</button>
+          <button id="mobile-toggle-questions" class="btn btn-outline" style="flex:1;">📝 Sorular</button>
         </div>
 
         <div class="reading-layout">
@@ -173,12 +207,12 @@
 
           <!-- Column 2: Questions -->
           <div id="reading-questions-column">
-            <div style="font-weight: 700; margin-bottom: 12px; color: var(--text-main);">Questions 1-4 (True / False / Not Given)</div>
+            <div style="font-weight: 700; margin-bottom: 12px; color: var(--text-main);">Sorular (True / False / Not Given)</div>
             <div id="reading-questions-container">
               Loading questions...
             </div>
             <button id="btn-submit-reading" class="btn btn-primary" style="width: 100%; margin-top: 14px;">
-              📝 Submit & Grade Reading
+              📝 Testi Puanla & Yanlışlarımı Kaydet
             </button>
             <div id="reading-feedback-area" style="margin-top: 16px;"></div>
           </div>
@@ -190,18 +224,17 @@
     <section id="panel-listening" class="panel-view">
       <div class="card">
         <div class="card-title">
-          <div><span>🎧</span> Interactive Listening Station</div>
-          <div class="badge badge-cyan">Gemini Audio TTS Engine</div>
+          <div><span>🎧</span> İnteraktif Listening İstasyonu</div>
+          <div class="badge badge-cyan">Gemini TTS Audio</div>
         </div>
-        <div class="card-desc">Listen to international English speakers and fill out the official answer sheet.</div>
+        <div class="card-desc">Akademik ve adli bilişim diyaloglarını dinleyin; cevap kağıdını doldurarak puanınızı görün.</div>
 
-        <!-- Audio Player Card -->
         <div class="audio-station">
           <div class="player-controls">
             <button id="btn-play-listening" class="play-pause-btn">▶</button>
             <div class="track-info">
               <div id="listening-section-title" style="font-weight: 700; color: #ffffff;">Section 1</div>
-              <div id="track-title" style="font-size: 0.8rem; color: var(--accent-cyan);">Audio ready</div>
+              <div id="track-title" style="font-size: 0.8rem; color: var(--accent-cyan);">Audio hazır</div>
               <div class="track-progress">
                 <div id="listening-progress-bar" class="track-bar"></div>
               </div>
@@ -214,84 +247,116 @@
 
         <div class="reading-layout">
           <div>
-            <div style="font-weight: 700; margin-bottom: 12px; color: var(--text-main);">Questions & Answer Sheet:</div>
+            <div style="font-weight: 700; margin-bottom: 12px; color: var(--text-main);">Soru Formu:</div>
             <div id="listening-questions-container">
               Loading listening questions...
             </div>
             <button id="btn-submit-listening" class="btn btn-primary" style="width: 100%; margin-top: 14px;">
-              📝 Submit & Grade Listening
+              📝 Listening Testini Puanla
             </button>
           </div>
           <div id="listening-feedback-area">
             <div class="card" style="text-align: center; color: var(--text-dim); padding: 40px 20px;">
-              Your listening score and detailed answer keys will be shown here.
+              Dinleme sonuçlarınız ve cevap anahtarı burada gösterilecektir.
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- ================= PANEL 5: AI MENTOR & ANALYTICS ================= -->
+    <!-- ================= PANEL 5: MASTERCLASS & TRICKS ================= -->
+    <section id="panel-tricks" class="panel-view">
+      <div class="card">
+        <div class="card-title">
+          <div><span>💡</span> Cambridge Masterclass & Sınav Hileleri</div>
+          <div class="badge badge-amber">IELTS 7.5+ Sırları</div>
+        </div>
+        <div class="card-desc">Examiner tuzakları, T/F/NG formülleri, Listening çeldiricileri ve Jean Monnet jürisini etkileyen C1-C2 argümantasyon taktikleri.</div>
+
+        <div id="tricks-container">
+          Loading masterclass library...
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= PANEL 6: MISTAKE NOTEBOOK (YANLIŞ DEFTERİ) ================= -->
+    <section id="panel-mistakes" class="panel-view">
+      <div class="card">
+        <div class="card-title">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span>❌</span> Kişisel Yanlış Defterim
+            <span id="badge-mistakes-count" class="badge badge-rose">0</span>
+          </div>
+        </div>
+        <div class="card-desc">Çözdüğünüz testlerde yanlış yaptığınız tüm sorular burada toplanır; çözümleri ve Cambridge taktikleriyle birlikte tekrar inceleyebilirsiniz.</div>
+
+        <div id="mistakes-list-container">
+          Loading mistakes...
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= PANEL 7: AI MENTOR & ANALYTICS ================= -->
     <section id="panel-mentor" class="panel-view">
       <div class="card">
         <div class="card-title">
-          <div><span>🧠</span> AI Mentor & Performance Intelligence</div>
+          <div><span>🧠</span> Kişisel AI Mentor & Strateji Masası</div>
           <button id="btn-generate-mentor" class="btn btn-primary" style="min-height: 36px; padding: 6px 14px; font-size: 0.85rem;">
-            🔄 Update Today's AI Action Plan
+            🔄 Kişisel Telafi Planımı Güncelle
           </button>
         </div>
-        <div class="card-desc">Tracks your multi-skill score velocity and generates custom micro-learning schedules tailored to Jean Monnet & Cambridge criteria.</div>
+        <div class="card-desc">Yanlış Defteriniz ve test geçmişiniz analiz edilerek doğrudan adınıza özel mikro çalışma programı üretilir.</div>
 
         <!-- Stats Grid -->
         <div class="stats-grid">
           <div class="stat-box">
             <div id="stat-total-tests" class="stat-num">0</div>
-            <div class="stat-label">Tests Completed</div>
+            <div class="stat-label">Toplam Test</div>
           </div>
           <div class="stat-box">
             <div id="stat-overall-avg" class="stat-num">0.0</div>
-            <div class="stat-label">Overall Average</div>
+            <div class="stat-label">Ortalama Band</div>
           </div>
           <div class="stat-box">
             <div id="stat-writing-avg" class="stat-num">-</div>
-            <div class="stat-label">Writing Average</div>
+            <div class="stat-label">Writing Ortalaması</div>
           </div>
           <div class="stat-box">
             <div id="stat-speaking-avg" class="stat-num">-</div>
-            <div class="stat-label">Speaking Average</div>
+            <div class="stat-label">Speaking Ortalaması</div>
           </div>
         </div>
 
         <!-- Chart and Mentor Recommendations -->
         <div class="reading-layout" style="margin-bottom: 24px;">
           <div class="card" style="margin-bottom: 0;">
-            <div style="font-weight: 700; margin-bottom: 14px; color: var(--accent-cyan);">Skill Balance (0 - 9.0 Band Scale)</div>
+            <div style="font-weight: 700; margin-bottom: 14px; color: var(--accent-cyan);">Beceri Dengesi (0 - 9.0 Skalası)</div>
             <canvas id="analytics-chart" width="360" height="240" style="width: 100%; height: auto; max-height: 240px;"></canvas>
           </div>
 
           <div id="mentor-report-area">
             <div class="card" style="margin-bottom: 0; text-align: center; color: var(--text-dim); padding: 40px 20px;">
-              Click 'Update Today's AI Action Plan' to receive your daily tailored Jean Monnet strategy report.
+              'Kişisel Telafi Planımı Güncelle' butonuna basarak yanlışlarınıza odaklanan günlük mentor raporunuzu alın.
             </div>
           </div>
         </div>
 
         <!-- History Table -->
         <div class="card">
-          <div style="font-weight: 700; margin-bottom: 12px; color: var(--text-main);">Recent Test Submissions</div>
+          <div style="font-weight: 700; margin-bottom: 12px; color: var(--text-main);">Son Test Kayıtlarım</div>
           <div class="table-responsive">
             <table class="custom-table">
               <thead>
                 <tr>
-                  <th>Date</th>
-                  <th>Mode</th>
-                  <th>Module</th>
-                  <th>Task Type</th>
-                  <th>Band Score</th>
+                  <th>Tarih</th>
+                  <th>Mod</th>
+                  <th>Modül</th>
+                  <th>Görev</th>
+                  <th>Band Skoru</th>
                 </tr>
               </thead>
               <tbody id="history-table-body">
-                <tr><td colspan="5" style="text-align: center; padding: 20px;">Loading history...</td></tr>
+                <tr><td colspan="5" style="text-align: center; padding: 20px;">Kayıtlar yükleniyor...</td></tr>
               </tbody>
             </table>
           </div>
@@ -315,9 +380,13 @@
       <svg viewBox="0 0 24 24" fill="none"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
       <span>Reading</span>
     </button>
-    <button class="mobile-nav-btn" data-module-target="listening">
-      <svg viewBox="0 0 24 24" fill="none"><path d="M3 18v-6a9 9 0 0118 0v6"/><path d="M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3zM3 19a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3z"/></svg>
-      <span>Listening</span>
+    <button class="mobile-nav-btn" data-module-target="tricks">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M9 18h6M10 22h4M12 2a7 7 0 00-7 7c0 2.5 1.5 4.5 3 6h8c1.5-1.5 3-3.5 3-6a7 7 0 00-7-7z"/></svg>
+      <span>Taktikler</span>
+    </button>
+    <button class="mobile-nav-btn" data-module-target="mistakes">
+      <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6M9 9l6 6"/></svg>
+      <span>Yanlışlarım</span>
     </button>
     <button class="mobile-nav-btn" data-module-target="mentor">
       <svg viewBox="0 0 24 24" fill="none"><path d="M12 2a10 10 0 100 20 10 10 0 000-20z"/><path d="M12 6v6l4 2"/></svg>

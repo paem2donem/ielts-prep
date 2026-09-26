@@ -1,11 +1,12 @@
 import os
 import re
+import json
 import datetime
 from pathlib import Path
 from google import genai
-from typing import Optional, Tuple, Dict, Any
-
+from typing import Optional, Tuple, Dict, Any, List
 from dotenv import load_dotenv
+
 load_dotenv()
 
 API_KEY = os.environ.get("GEMINI_API_KEY")
@@ -173,7 +174,6 @@ def get_or_generate_tts_audio(section_id: str, script_text: str) -> Optional[str
         return f"/static/audio/{clean_id}.wav"
 
     try:
-        # Prompt for natural speech delivery
         tts_prompt = f"Please read the following English listening exam audio script clearly at an authentic natural speaking pace for an international Cambridge IELTS test:\n\n{script_text.strip()}"
         res = client.models.generate_content(
             model=TTS_MODEL,
@@ -192,20 +192,91 @@ def get_or_generate_tts_audio(section_id: str, script_text: str) -> Optional[str
         return None
     return None
 
-def generate_ai_mentor_report(performance_history: list, mode: str = "cyber") -> str:
-    if not performance_history:
-        return "Henüz yeterli test geçmişiniz bulunmuyor. Listening, Reading, Writing veya Speaking modüllerinden en az 1-2 test tamamladığınızda mentorunuz kişisel analizinizi oluşturacaktır."
-
+# ==========================================
+# DYNAMIC AI EXAM GENERATOR (Sonsuz Soru Havuzu)
+# ==========================================
+def generate_dynamic_reading_test(mode: str = "cyber") -> Dict[str, Any]:
+    """Generates a brand new Cambridge Reading passage + 4 questions in JSON."""
     is_cyber = (mode == "cyber")
+    topic_hint = "Digital Forensics, Ransomware Investigation, Memory Analysis, or Cloud Evidence Admissibility" if is_cyber else "Renewable Energy, Cognitive Psychology, Ocean Exploration, or Urban Sustainability"
+
     prompt = f"""
-Sen Adli Bilişim & Siber Güvenlik uzmanlarına ve Jean Monnet bursiyer adaylarına özel IELTS Koçusun.
-Adayın çözdüğü testlerin geçmiş kayıtları:
+You are a senior Cambridge IELTS Academic Question Writer.
+Generate a BRAND-NEW, HIGH-LEVEL Reading Test (Target Band: 7.5 - 8.5 / C1-C2).
+Topic Focus: {topic_hint}.
+
+Strict Requirements:
+1. Passage length: 300-380 words, dense academic prose with sophisticated vocabulary.
+2. 4 True/False/Not Given questions testing subtle distinctions, paraphrasing, and qualifiers.
+3. For each question, provide:
+   - 'prompt': The question statement.
+   - 'options': ['TRUE', 'FALSE', 'NOT GIVEN']
+   - 'answer': 'TRUE', 'FALSE', or 'NOT GIVEN'
+   - 'explanation': Clear explanation in Turkish explaining WHY it is the answer.
+   - 'trick_tip': A Cambridge tip or trap warning (in Turkish).
+
+Return ONLY valid JSON with this exact structure:
+{{
+  "title": "Passage Title",
+  "text": "Full passage text...",
+  "questions": [
+    {{
+      "id": "q1",
+      "prompt": "Statement...",
+      "options": ["TRUE", "FALSE", "NOT GIVEN"],
+      "answer": "TRUE",
+      "explanation": "Açıklama...",
+      "trick_tip": "Taktik..."
+    }}
+  ]
+}}
+"""
+    raw_text = generate_text_with_fallback(prompt)
+    clean_json = re.sub(r'^```json\s*', '', raw_text.strip(), flags=re.MULTILINE)
+    clean_json = re.sub(r'```$', '', clean_json.strip(), flags=re.MULTILINE)
+    return json.loads(clean_json)
+
+def generate_dynamic_writing_prompt(task_type: str = "Task 2", mode: str = "cyber") -> Dict[str, Any]:
+    """Generates a brand new Writing prompt for Task 1 or Task 2."""
+    is_cyber = (mode == "cyber")
+    topic_hint = "Cyber sovereignty, AI surveillance admissibility, encryption vs national security" if is_cyber else "Workplace automation, university curriculum, environmental taxation"
+    
+    prompt = f"""
+You are a Cambridge IELTS Chief Writing Examiner.
+Generate a NEW, rigorous IELTS {task_type} prompt.
+Domain: {'Forensic Computing / Jean Monnet' if is_cyber else 'Cambridge Academic'}.
+Theme: {topic_hint}.
+
+Return ONLY valid JSON:
+{{
+  "title": "{task_type} (Prompt Title)",
+  "prompt": "Official IELTS prompt statement...",
+  "min_words": {150 if 'Task 1' in task_type else 250},
+  "key_vocabulary_tips": ["word1", "word2", "word3"]
+}}
+"""
+    raw_text = generate_text_with_fallback(prompt)
+    clean_json = re.sub(r'^```json\s*', '', raw_text.strip(), flags=re.MULTILINE)
+    clean_json = re.sub(r'```$', '', clean_json.strip(), flags=re.MULTILINE)
+    return json.loads(clean_json)
+
+def generate_personalized_guidance(user_name: str, performance_history: list, mistakes: list, mode: str = "cyber") -> str:
+    """Analyzes a specific candidate's mistakes log and generates personalized remedial training."""
+    is_cyber = (mode == "cyber")
+    
+    prompt = f"""
+Sen {user_name} adlı adayın kişisel Cambridge IELTS ve Jean Monnet Baş Danışmanısın.
+Adayın sınav performans geçmişi:
 {performance_history}
 
-Lütfen şu başlıklar altında Türkçe, son derece motive edici, analitik ve nokta atışı bir mentorluk raporu sun:
-1. 📈 **Performans Trendi ve Modül Dengesi:** Aday hangi beceride güçlü, hangi beceride band kaybı yaşıyor?
-2. 🛡️ **{"Siber Güvenlik / Jean Monnet Terim Havuzu" if is_cyber else "Akademik C1-C2 Kelime ve Kalıp Stratejisi"}:** Bir sonraki denemede mutlaka kullanılması önerilen 3 ileri düzey yapı ve örnek cümle.
-3. ⏱️ **Kişiye Özel Günlük 40 Dakikalık Çalışma Planı:** Bugün yapması gereken mikro pratikler.
+Adayın 'Yanlış Defteri'ndeki son hataları:
+{mistakes[:8]}
+
+Lütfen adaya doğrudan hitap ederek Türkçe, son derece motive edici, analitik ve stratejik bir kılavuz hazırla:
+1. 🎯 **Hata Teşhisi ve Tuzak Analizi:** Adayın en çok puan kaybettiği soru tipi veya yanılgı kalıbı nedir? (Örn: NOT GIVEN ile FALSE farkı, kelime sayısı yetersizliği, bağlaç eksikliği).
+2. 💡 **Bu Hataları Çözen 2 Altın Taktik (Cheat Codes):** Bir sonraki denemede derhal uygulayacağı sınav ipuçları.
+3. 🛡️ **{"Jean Monnet / Siber Terminoloji Reçetesi" if is_cyber else "C1-C2 Akademik Sözlük Hedefi"}:** Mutlaka hafızaya atması gereken 3 ileri seviye kelime ve örnek kullanım.
+4. ⏱️ **Bugüne Özel 35 Dakikalık Hızlı Telafi Planı:**
 """
     try:
         return generate_text_with_fallback(prompt)

@@ -1,20 +1,25 @@
 /* ===================================================================
-   ForenSync Academy: IELTS & Cyber Prep - Frontend Engine (ES6)
-   Full Interactive Modules: Listening, Reading, Writing, Speaking, Mentor
+   ForenSync Academy: IELTS & Cyber Prep - Frontend Engine (v3.0)
+   Full Interactive Modules: Dynamic AI Generator, User Profiles, 
+   Error Notebook, Cambridge Tricks, Timers & Analytics
    =================================================================== */
 
 // Global State
 const state = {
+  currentUser: {
+    email: localStorage.getItem('forensync_user_email') || 'paem2.donem@gmail.com',
+    name: localStorage.getItem('forensync_user_name') || 'Aday'
+  },
   currentMode: 'cyber', // 'cyber' or 'academic'
   currentModule: 'writing',
   examData: null,
-  
+  activeCustomPassage: null,
+
   // Timers
   timers: {
     writing: { remaining: 3600, interval: null, running: false },
     reading: { remaining: 3600, interval: null, running: false },
-    speakingPrep: { remaining: 60, interval: null, running: false },
-    speakingRecord: { remaining: 120, interval: null, running: false }
+    speakingPrep: { remaining: 60, interval: null, running: false }
   },
 
   // Audio Recording
@@ -30,23 +35,87 @@ const state = {
 
 // DOM Content Loaded
 document.addEventListener('DOMContentLoaded', async () => {
+  initAuthUI();
   initNavigation();
   initModeSwitcher();
   initTimers();
   initWritingModule();
   initSpeakingRecorder();
+  initDynamicGenerators();
   
-  // Initial load of exam data
+  // Initial load
   await switchMode('cyber');
   loadAnalytics();
+  loadTricks();
+  loadMistakes();
 });
+
+/* ================= Auth & User Profile ================= */
+function initAuthUI() {
+  const userPill = document.getElementById('user-profile-pill');
+  const userDisplayEmail = document.getElementById('user-display-email');
+  const userDisplayAvatar = document.getElementById('user-display-avatar');
+  const modal = document.getElementById('modal-login');
+  const closeBtn = document.getElementById('btn-close-login');
+  const saveBtn = document.getElementById('btn-save-login');
+  const inputEmail = document.getElementById('login-email-input');
+
+  function updatePill() {
+    userDisplayEmail.textContent = state.currentUser.email;
+    userDisplayAvatar.textContent = state.currentUser.email.charAt(0).toUpperCase();
+  }
+  updatePill();
+
+  if (userPill) {
+    userPill.addEventListener('click', () => {
+      inputEmail.value = state.currentUser.email;
+      modal.classList.add('active');
+    });
+  }
+
+  if (closeBtn) {
+    closeBtn.addEventListener('click', () => modal.classList.remove('active'));
+  }
+
+  if (saveBtn) {
+    saveBtn.addEventListener('click', async () => {
+      const email = inputEmail.value.trim().toLowerCase();
+      if (!email || !email.includes('@')) {
+        alert('Lütfen geçerli bir Gmail / e-posta adresi girin.');
+        return;
+      }
+
+      state.currentUser.email = email;
+      state.currentUser.name = email.split('@')[0].capitalize();
+      localStorage.setItem('forensync_user_email', email);
+      localStorage.setItem('forensync_user_name', state.currentUser.name);
+
+      updatePill();
+      modal.classList.remove('active');
+
+      // Sync with server
+      await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email, name: state.currentUser.name })
+      });
+
+      loadAnalytics();
+      loadMistakes();
+    });
+  }
+}
+
+String.prototype.capitalize = function() {
+  return this.charAt(0).toUpperCase() + this.slice(1);
+};
 
 /* ================= Navigation Handler ================= */
 function initNavigation() {
   const navButtons = document.querySelectorAll('[data-module-target]');
   
   navButtons.forEach(btn => {
-    btn.addEventListener('click', (e) => {
+    btn.addEventListener('click', () => {
       const target = btn.getAttribute('data-module-target');
       switchModule(target);
     });
@@ -56,14 +125,12 @@ function initNavigation() {
 function switchModule(moduleName) {
   state.currentModule = moduleName;
 
-  // Update UI Panels
   document.querySelectorAll('.panel-view').forEach(panel => {
     panel.classList.remove('active');
   });
   const targetPanel = document.getElementById(`panel-${moduleName}`);
   if (targetPanel) targetPanel.classList.add('active');
 
-  // Update Nav Buttons
   document.querySelectorAll('[data-module-target]').forEach(btn => {
     if (btn.getAttribute('data-module-target') === moduleName) {
       btn.classList.add('active');
@@ -74,9 +141,9 @@ function switchModule(moduleName) {
 
   window.scrollTo({ top: 0, behavior: 'smooth' });
 
-  if (moduleName === 'mentor') {
-    loadAnalytics();
-  }
+  if (moduleName === 'mentor') loadAnalytics();
+  if (moduleName === 'mistakes') loadMistakes();
+  if (moduleName === 'tricks') loadTricks();
 }
 
 /* ================= Mode Switcher ================= */
@@ -90,12 +157,11 @@ function initModeSwitcher() {
 
 async function switchMode(mode) {
   state.currentMode = mode;
+  state.activeCustomPassage = null; // reset dynamic passage on mode switch
 
-  // Toggle active button
   document.getElementById('btn-mode-cyber').classList.toggle('active', mode === 'cyber');
   document.getElementById('btn-mode-academic').classList.toggle('active', mode === 'academic');
 
-  // Fetch Exam Data
   try {
     const res = await fetch(`/api/exam-data/${mode}`);
     state.examData = await res.json();
@@ -113,6 +179,155 @@ function renderAllModules() {
   renderSpeakingModule();
 }
 
+/* ================= Dynamic AI Exam Generators ================= */
+function initDynamicGenerators() {
+  // Reading AI Generator
+  const btnGenReading = document.getElementById('btn-generate-ai-reading');
+  if (btnGenReading) {
+    btnGenReading.addEventListener('click', async () => {
+      btnGenReading.disabled = true;
+      btnGenReading.innerHTML = '<span class="spinner"></span> AI Generating Band 8.0 Passage...';
+
+      try {
+        const res = await fetch('/api/exam/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ module: 'reading', mode: state.currentMode })
+        });
+        const data = await res.json();
+        if (data.success) {
+          state.activeCustomPassage = data.data;
+          renderCustomReadingPassage(data.data);
+          alert('✨ Yeni Cambridge IELTS Okuma Pasajı ve Soruları başarıyla üretildi!');
+        }
+      } catch (e) {
+        alert('Üretim hatası: ' + e.message);
+      } finally {
+        btnGenReading.disabled = false;
+        btnGenReading.innerHTML = '✨ Yapay Zeka ile Yeni Pasaj Üret';
+      }
+    });
+  }
+
+  // Writing AI Generator
+  const btnGenWriting = document.getElementById('btn-generate-ai-writing');
+  if (btnGenWriting) {
+    btnGenWriting.addEventListener('click', async () => {
+      btnGenWriting.disabled = true;
+      btnGenWriting.innerHTML = '<span class="spinner"></span> AI Writing Prompt...';
+
+      try {
+        const res = await fetch('/api/exam/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            module: 'writing', 
+            mode: state.currentMode,
+            task_type: currentWritingTask
+          })
+        });
+        const data = await res.json();
+        if (data.success) {
+          document.getElementById('writing-prompt-text').textContent = data.data.prompt;
+          alert('✨ Yeni Kompozisyon Sorusu oluşturuldu!');
+        }
+      } catch (e) {
+        alert('Üretim hatası: ' + e.message);
+      } finally {
+        btnGenWriting.disabled = false;
+        btnGenWriting.innerHTML = '✨ Yeni Görev Üret';
+      }
+    });
+  }
+}
+
+/* ================= Reading Module ================= */
+function renderReadingModule() {
+  if (state.activeCustomPassage) {
+    renderCustomReadingPassage(state.activeCustomPassage);
+    return;
+  }
+  const readingData = state.examData.reading;
+  if (!readingData) return;
+
+  const passage = readingData.passage_1;
+  document.getElementById('reading-passage-title').textContent = passage.title;
+  document.getElementById('reading-passage-text').innerHTML = passage.text.split('\n\n').map(p => `<p>${p}</p>`).join('');
+
+  renderReadingQuestions(passage.questions);
+}
+
+function renderCustomReadingPassage(passage) {
+  document.getElementById('reading-passage-title').innerHTML = `✨ [AI Generated] ${passage.title}`;
+  document.getElementById('reading-passage-text').innerHTML = passage.text.split('\n\n').map(p => `<p>${p}</p>`).join('');
+  renderReadingQuestions(passage.questions);
+}
+
+function renderReadingQuestions(questions) {
+  const qContainer = document.getElementById('reading-questions-container');
+  qContainer.innerHTML = '';
+
+  questions.forEach(q => {
+    const qDiv = document.createElement('div');
+    qDiv.className = 'question-item';
+
+    const optionsHtml = q.options.map(opt => `
+      <label class="radio-label">
+        <input type="radio" name="rq-${q.id}" value="${opt}">
+        <span>${opt}</span>
+      </label>
+    `).join('');
+
+    qDiv.innerHTML = `
+      <div class="question-text">${q.prompt}</div>
+      <div class="q-options-group">${optionsHtml}</div>
+    `;
+
+    qContainer.appendChild(qDiv);
+  });
+}
+
+// Grade Reading
+const submitReadingBtn = document.getElementById('btn-submit-reading');
+if (submitReadingBtn) {
+  submitReadingBtn.addEventListener('click', async () => {
+    const passage = state.activeCustomPassage || state.examData.reading.passage_1;
+    const answers = {};
+
+    passage.questions.forEach(q => {
+      const checked = document.querySelector(`input[name="rq-${q.id}"]:checked`);
+      answers[q.id] = checked ? checked.value : '';
+    });
+
+    submitReadingBtn.disabled = true;
+    submitReadingBtn.innerHTML = '<span class="spinner"></span> Grading...';
+
+    try {
+      const res = await fetch('/api/grade/reading', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mode: state.currentMode,
+          passage_id: 'passage_1',
+          answers: answers,
+          user_email: state.currentUser.email,
+          custom_passage: state.activeCustomPassage
+        })
+      });
+
+      const data = await res.json();
+      displayGradingResult('reading-feedback-area', data, 'Reading');
+      loadAnalytics();
+      loadMistakes();
+    } catch (e) {
+      alert('Grading error: ' + e.message);
+    } finally {
+      submitReadingBtn.disabled = false;
+      submitReadingBtn.innerHTML = '📝 Submit & Grade Reading';
+    }
+  });
+}
+
 /* ================= Listening Module ================= */
 let currentListeningSection = 'section_1';
 
@@ -125,11 +340,10 @@ function renderListeningModule() {
   document.getElementById('listening-section-title').textContent = section.title;
   document.getElementById('listening-section-intro').textContent = section.intro;
 
-  // Render Questions
   const qContainer = document.getElementById('listening-questions-container');
   qContainer.innerHTML = '';
 
-  section.questions.forEach((q, idx) => {
+  section.questions.forEach(q => {
     const qDiv = document.createElement('div');
     qDiv.className = 'question-item';
 
@@ -158,12 +372,10 @@ function renderListeningModule() {
     qContainer.appendChild(qDiv);
   });
 
-  // Prepare Audio
   loadListeningAudio(state.currentMode, currentListeningSection);
 }
 
 async function loadListeningAudio(mode, sectionId) {
-  const playBtn = document.getElementById('btn-play-listening');
   const trackTitle = document.getElementById('track-title');
   trackTitle.textContent = 'Audio loading...';
 
@@ -175,11 +387,11 @@ async function loadListeningAudio(mode, sectionId) {
       state.audioElement.src = data.audio_url;
       trackTitle.textContent = 'Ready to play (Authentic Gemini Audio)';
     } else {
-      trackTitle.textContent = 'Audio script ready (Native Audio Engine)';
+      trackTitle.textContent = 'Audio script ready (Native Speech Engine)';
       state.audioElement.src = '';
     }
   } catch (e) {
-    trackTitle.textContent = 'Audio stream ready';
+    trackTitle.textContent = 'Audio ready';
   }
 }
 
@@ -198,7 +410,6 @@ if (playBtn) {
         state.isPlaying = true;
       }
     } else {
-      // Speech synthesis fallback
       const section = state.examData.listening[currentListeningSection];
       if (window.speechSynthesis && section) {
         window.speechSynthesis.cancel();
@@ -206,7 +417,6 @@ if (playBtn) {
         utterance.lang = 'en-GB';
         utterance.rate = 0.95;
         window.speechSynthesis.speak(utterance);
-        alert('Playing audio via speech synthesis engine...');
       }
     }
   });
@@ -250,108 +460,20 @@ if (submitListeningBtn) {
         body: JSON.stringify({
           mode: state.currentMode,
           section_id: currentListeningSection,
-          answers: answers
+          answers: answers,
+          user_email: state.currentUser.email
         })
       });
 
       const data = await res.json();
       displayGradingResult('listening-feedback-area', data, 'Listening');
+      loadAnalytics();
+      loadMistakes();
     } catch (e) {
       alert('Grading error: ' + e.message);
     } finally {
       submitListeningBtn.disabled = false;
       submitListeningBtn.innerHTML = '📝 Submit & Grade Listening';
-    }
-  });
-}
-
-/* ================= Reading Module ================= */
-function renderReadingModule() {
-  const readingData = state.examData.reading;
-  if (!readingData) return;
-
-  const passage = readingData.passage_1;
-  document.getElementById('reading-passage-title').textContent = passage.title;
-  document.getElementById('reading-passage-text').innerHTML = passage.text.split('\n\n').map(p => `<p>${p}</p>`).join('');
-
-  const qContainer = document.getElementById('reading-questions-container');
-  qContainer.innerHTML = '';
-
-  passage.questions.forEach((q, idx) => {
-    const qDiv = document.createElement('div');
-    qDiv.className = 'question-item';
-
-    const optionsHtml = q.options.map(opt => `
-      <label class="radio-label">
-        <input type="radio" name="rq-${q.id}" value="${opt}">
-        <span>${opt}</span>
-      </label>
-    `).join('');
-
-    qDiv.innerHTML = `
-      <div class="question-text">${q.prompt}</div>
-      <div class="q-options-group">${optionsHtml}</div>
-    `;
-
-    qContainer.appendChild(qDiv);
-  });
-}
-
-// Mobile Reading View Toggle (Passage vs Questions)
-const tabPassage = document.getElementById('mobile-toggle-passage');
-const tabQuestions = document.getElementById('mobile-toggle-questions');
-const passageBox = document.getElementById('reading-passage-column');
-const questionsBox = document.getElementById('reading-questions-column');
-
-if (tabPassage && tabQuestions) {
-  tabPassage.addEventListener('click', () => {
-    tabPassage.classList.add('active');
-    tabQuestions.classList.remove('active');
-    passageBox.style.display = 'block';
-    questionsBox.style.display = 'none';
-  });
-
-  tabQuestions.addEventListener('click', () => {
-    tabQuestions.classList.add('active');
-    tabPassage.classList.remove('active');
-    passageBox.style.display = 'none';
-    questionsBox.style.display = 'block';
-  });
-}
-
-// Grade Reading
-const submitReadingBtn = document.getElementById('btn-submit-reading');
-if (submitReadingBtn) {
-  submitReadingBtn.addEventListener('click', async () => {
-    const passage = state.examData.reading.passage_1;
-    const answers = {};
-
-    passage.questions.forEach(q => {
-      const checked = document.querySelector(`input[name="rq-${q.id}"]:checked`);
-      answers[q.id] = checked ? checked.value : '';
-    });
-
-    submitReadingBtn.disabled = true;
-    submitReadingBtn.innerHTML = '<span class="spinner"></span> Grading...';
-
-    try {
-      const res = await fetch('/api/grade/reading', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          mode: state.currentMode,
-          passage_id: 'passage_1',
-          answers: answers
-        })
-      });
-
-      const data = await res.json();
-      displayGradingResult('reading-feedback-area', data, 'Reading');
-    } catch (e) {
-      alert('Grading error: ' + e.message);
-    } finally {
-      submitReadingBtn.disabled = false;
-      submitReadingBtn.innerHTML = '📝 Submit & Grade Reading';
     }
   });
 }
@@ -378,7 +500,6 @@ function initWritingModule() {
     renderWritingModule();
   });
 
-  // Word count tracker
   essayInput.addEventListener('input', () => {
     const text = essayInput.value.trim();
     const words = text ? text.split(/\s+/).length : 0;
@@ -386,15 +507,9 @@ function initWritingModule() {
 
     const countElem = document.getElementById('writing-word-count');
     countElem.textContent = `${words} / ${minWords} words`;
-
-    if (words >= minWords) {
-      countElem.style.color = 'var(--accent-emerald)';
-    } else {
-      countElem.style.color = 'var(--text-muted)';
-    }
+    countElem.style.color = (words >= minWords) ? 'var(--accent-emerald)' : 'var(--text-muted)';
   });
 
-  // Submit Writing
   const submitWritingBtn = document.getElementById('btn-submit-writing');
   submitWritingBtn.addEventListener('click', async () => {
     const essayText = essayInput.value;
@@ -404,7 +519,7 @@ function initWritingModule() {
     submitWritingBtn.innerHTML = '<span class="spinner"></span> AI Examiner Analyzing...';
 
     const feedbackArea = document.getElementById('writing-feedback-area');
-    feedbackArea.innerHTML = '<div style="text-align:center; padding: 20px;"><span class="spinner"></span> Cambridge & Jean Monnet Examiner evaluating your essay...</div>';
+    feedbackArea.innerHTML = '<div style="text-align:center; padding: 20px;"><span class="spinner"></span> Cambridge & Jean Monnet Examiner evaluating essay...</div>';
 
     try {
       const res = await fetch('/api/evaluate/writing', {
@@ -414,7 +529,8 @@ function initWritingModule() {
           essay_text: essayText,
           task_type: currentWritingTask,
           mode: state.currentMode,
-          prompt_context: promptCtx
+          prompt_context: promptCtx,
+          user_email: state.currentUser.email
         })
       });
 
@@ -432,6 +548,7 @@ function initWritingModule() {
             ${formatMarkdown(data.feedback)}
           </div>
         `;
+        loadAnalytics();
       } else {
         feedbackArea.innerHTML = `<div class="card" style="border-color: var(--accent-rose); color: var(--accent-rose);">${data.error || 'Evaluation error'}</div>`;
       }
@@ -479,7 +596,6 @@ function initSpeakingRecorder() {
 
   recordBtn.addEventListener('click', async () => {
     if (!state.isRecording) {
-      // Start Recording
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         state.mediaRecorder = new MediaRecorder(stream);
@@ -501,7 +617,6 @@ function initSpeakingRecorder() {
         recordBtn.classList.add('recording');
         recordBtn.innerHTML = '⏹';
 
-        // Start timer
         let sec = 0;
         timerDisplay.textContent = '00:00';
         state.recordInterval = setInterval(() => {
@@ -512,10 +627,9 @@ function initSpeakingRecorder() {
         }, 1000);
 
       } catch (err) {
-        alert('Microphone access denied or not available: ' + err.message);
+        alert('Microphone access denied: ' + err.message);
       }
     } else {
-      // Stop Recording
       state.mediaRecorder.stop();
       state.isRecording = false;
       recordBtn.classList.remove('recording');
@@ -538,6 +652,7 @@ function initSpeakingRecorder() {
     formData.append('part', currentSpeakingPart);
     formData.append('mode', state.currentMode);
     formData.append('prompt_context', document.getElementById('speaking-cue-card-box').textContent);
+    formData.append('user_email', state.currentUser.email);
 
     try {
       const res = await fetch('/api/evaluate/speaking', {
@@ -559,6 +674,7 @@ function initSpeakingRecorder() {
             ${formatMarkdown(data.feedback)}
           </div>
         `;
+        loadAnalytics();
       } else {
         feedbackArea.innerHTML = `<div class="card" style="color: var(--accent-rose);">${data.error || 'Evaluation error'}</div>`;
       }
@@ -571,7 +687,100 @@ function initSpeakingRecorder() {
   });
 }
 
-/* ================= Timer System ================= */
+/* ================= Mistake Notebook (Yanlış Defteri) ================= */
+async function loadMistakes() {
+  const container = document.getElementById('mistakes-list-container');
+  if (!container) return;
+
+  try {
+    const res = await fetch(`/api/user/mistakes?email=${encodeURIComponent(state.currentUser.email)}`);
+    const data = await res.json();
+    const mistakes = data.mistakes || [];
+
+    const badgeElem = document.getElementById('badge-mistakes-count');
+    if (badgeElem) badgeElem.textContent = mistakes.length;
+
+    if (mistakes.length === 0) {
+      container.innerHTML = `
+        <div class="card" style="text-align: center; padding: 40px; color: var(--text-dim);">
+          🎉 Tebrikler! Henüz kaydedilmiş bir yanlışınız bulunmuyor. Test çözdükçe yapay zeka hatalarınızı buraya analiz edecektir.
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = mistakes.map(m => `
+      <div class="mistake-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <span class="badge badge-rose">${m.module}</span>
+          <span style="font-size: 0.75rem; color: var(--text-dim);">${m.date}</span>
+        </div>
+        <div class="mistake-q">${m.question_prompt}</div>
+        <div class="mistake-answers-row">
+          <div>Sizin Cevabınız: <span class="ans-wrong">${m.user_answer}</span></div>
+          <div>Doğru Cevap: <span class="ans-right">${m.correct_answer}</span></div>
+        </div>
+        ${m.explanation ? `<div class="mistake-expl"><strong>Çözüm & Neden:</strong> ${m.explanation}</div>` : ''}
+        ${m.trick_tip ? `<div class="mistake-trick">💡 <strong>Cambridge Taktik:</strong> ${m.trick_tip}</div>` : ''}
+      </div>
+    `).join('');
+  } catch (err) {
+    console.error('Mistakes load error:', err);
+  }
+}
+
+/* ================= Masterclass & Tricks ================= */
+async function loadTricks() {
+  const container = document.getElementById('tricks-container');
+  if (!container) return;
+
+  try {
+    const res = await fetch('/api/tricks');
+    const data = await res.json();
+
+    let html = '';
+    for (const [moduleKey, mod] of Object.entries(data)) {
+      html += `
+        <div class="card" style="margin-bottom: 24px;">
+          <div class="card-title">
+            <div>${mod.title}</div>
+          </div>
+          <div class="card-desc">${mod.description}</div>
+      `;
+
+      mod.sections.forEach(sec => {
+        const rulesList = sec.rules.map(r => `<li>${r}</li>`).join('');
+        const exampleHtml = sec.example ? `
+          <div class="trick-example-box" style="margin-top: 10px;">
+            <div style="font-weight: 700; margin-bottom: 4px;">🔎 Örnek Vaka:</div>
+            <div><em>Pasaj:</em> "${sec.example.passage}"</div>
+            <div style="margin-top: 4px;"><em>Soru:</em> "${sec.example.question}"</div>
+            <div style="margin-top: 4px; color: var(--accent-emerald);"><strong>Cevap:</strong> ${sec.example.answer}</div>
+          </div>
+        ` : '';
+
+        html += `
+          <div class="trick-block">
+            <div class="trick-topic">
+              <span>${sec.topic}</span>
+              <span class="badge badge-amber">${sec.badge}</span>
+            </div>
+            <ul class="trick-list">${rulesList}</ul>
+            ${exampleHtml}
+          </div>
+        `;
+      });
+
+      html += `</div>`;
+    }
+
+    container.innerHTML = html;
+  } catch (err) {
+    console.error('Tricks load error:', err);
+  }
+}
+
+/* ================= Timers ================= */
 function initTimers() {
   const writingTimerBtn = document.getElementById('btn-timer-writing');
   if (writingTimerBtn) {
@@ -615,10 +824,10 @@ function toggleExamTimer(name, defaultSec, displayId, btnElem) {
   }
 }
 
-/* ================= Analytics & AI Mentor ================= */
+/* ================= Analytics & Personalized Mentor ================= */
 async function loadAnalytics() {
   try {
-    const res = await fetch('/api/analytics');
+    const res = await fetch(`/api/user/analytics?email=${encodeURIComponent(state.currentUser.email)}`);
     const data = await res.json();
 
     document.getElementById('stat-total-tests').textContent = data.total_tests;
@@ -626,14 +835,12 @@ async function loadAnalytics() {
     document.getElementById('stat-writing-avg').textContent = data.module_averages.Writing ? data.module_averages.Writing.toFixed(1) : '-';
     document.getElementById('stat-speaking-avg').textContent = data.module_averages.Speaking ? data.module_averages.Speaking.toFixed(1) : '-';
 
-    // Draw Radar / Bar chart on canvas
     drawScoreChart(data.module_averages);
 
-    // History Table
     const tableBody = document.getElementById('history-table-body');
     if (tableBody) {
       if (!data.history || data.history.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 20px;">No test submissions yet.</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 20px;">Henüz çözülmüş test kaydınız bulunmuyor.</td></tr>';
       } else {
         tableBody.innerHTML = data.history.map(row => `
           <tr>
@@ -673,50 +880,49 @@ function drawScoreChart(averages) {
     const x = spacing + idx * (barWidth + spacing);
     const y = h - 35 - barHeight;
 
-    // Background bar
     ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
     ctx.fillRect(x, 20, barWidth, h - 55);
 
-    // Score bar
     ctx.fillStyle = colors[idx];
     ctx.beginPath();
     ctx.roundRect(x, y, barWidth, barHeight, [6, 6, 0, 0]);
     ctx.fill();
 
-    // Score label on top
     ctx.fillStyle = '#f8fafc';
     ctx.font = 'bold 12px Inter, sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText(score > 0 ? score.toFixed(1) : '0.0', x + barWidth / 2, y - 6);
 
-    // Module name below
     ctx.fillStyle = '#94a3b8';
     ctx.font = '11px Inter, sans-serif';
     ctx.fillText(mod, x + barWidth / 2, h - 14);
   });
 }
 
-// AI Mentor Plan Generator
+// AI Personalized Mentor Plan Generator
 const mentorBtn = document.getElementById('btn-generate-mentor');
 if (mentorBtn) {
   mentorBtn.addEventListener('click', async () => {
     mentorBtn.disabled = true;
-    mentorBtn.innerHTML = '<span class="spinner"></span> AI Coach Analyzing Your History...';
+    mentorBtn.innerHTML = '<span class="spinner"></span> Yanlışlarınız Analiz Ediliyor...';
 
     const reportArea = document.getElementById('mentor-report-area');
-    reportArea.innerHTML = '<div style="text-align: center; padding: 25px;"><span class="spinner"></span> Compiling Cambridge & Europol study plan tailored to your weak points...</div>';
+    reportArea.innerHTML = '<div style="text-align: center; padding: 25px;"><span class="spinner"></span> Yanlış Defteriniz ve sınav geçmişiniz incelenerek size özel 35 dakikalık telafi reçetesi oluşturuluyor...</div>';
 
     try {
       const res = await fetch('/api/mentor', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mode: state.currentMode })
+        body: JSON.stringify({ 
+          mode: state.currentMode,
+          user_email: state.currentUser.email
+        })
       });
       const data = await res.json();
       reportArea.innerHTML = `
         <div class="feedback-container">
           <div style="font-weight: 700; color: var(--accent-cyan); margin-bottom: 12px; font-size: 1.15rem;">
-            🛡️ Daily Action Plan & Strategy Report
+            🛡️ ${state.currentUser.name} İçin Kişiselleştirilmiş IELTS Strateji Raporu
           </div>
           ${formatMarkdown(data.report)}
         </div>
@@ -725,7 +931,7 @@ if (mentorBtn) {
       reportArea.innerHTML = `<div class="card" style="color: var(--accent-rose);">Mentor error: ${e.message}</div>`;
     } finally {
       mentorBtn.disabled = false;
-      mentorBtn.innerHTML = '🔄 Update Today\'s AI Action Plan';
+      mentorBtn.innerHTML = '🔄 Kişisel Telafi Planımı Güncelle';
     }
   });
 }
@@ -739,8 +945,8 @@ function displayGradingResult(containerId, data, moduleName) {
     <div style="padding: 10px; margin-bottom: 8px; border-radius: 8px; background: ${item.is_correct ? 'rgba(16, 185, 129, 0.1)' : 'rgba(244, 63, 94, 0.1)'}; border: 1px solid ${item.is_correct ? 'rgba(16, 185, 129, 0.25)' : 'rgba(244, 63, 94, 0.25)'};">
       <div style="font-weight: 600; font-size: 0.9rem;">${item.prompt}</div>
       <div style="font-size: 0.85rem; margin-top: 4px;">
-        Your answer: <strong>${item.user_answer}</strong> | Correct: <strong style="color: var(--accent-emerald);">${item.correct_answer}</strong>
-        ${item.is_correct ? '✅' : '❌'}
+        Cevabınız: <strong>${item.user_answer}</strong> | Doğru: <strong style="color: var(--accent-emerald);">${item.correct_answer}</strong>
+        ${item.is_correct ? '✅' : '❌ (Yanlış Defterine Eklendi)'}
       </div>
       ${item.explanation ? `<div style="font-size: 0.8rem; color: var(--text-dim); margin-top: 4px;"><em>${item.explanation}</em></div>` : ''}
     </div>
@@ -750,10 +956,10 @@ function displayGradingResult(containerId, data, moduleName) {
     <div class="feedback-container">
       <div class="score-hero">
         <div>
-          <div style="text-transform: uppercase; font-size: 0.8rem; color: var(--text-dim);">${moduleName} Band Score</div>
+          <div style="text-transform: uppercase; font-size: 0.8rem; color: var(--text-dim);">${moduleName} Band Skoru</div>
           <div class="score-val">Band ${data.band_score}</div>
         </div>
-        <div class="badge ${data.correct_count >= 3 ? 'badge-emerald' : 'badge-amber'}">${data.correct_count} / ${data.total} Correct</div>
+        <div class="badge ${data.correct_count >= 3 ? 'badge-emerald' : 'badge-amber'}">${data.correct_count} / ${data.total} Doğru</div>
       </div>
       <div style="margin-top: 16px;">${itemsHtml}</div>
     </div>
