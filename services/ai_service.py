@@ -214,10 +214,14 @@ Topic Focus: {topic_hint}.
 Strict Requirements:
 1. Passage length: 300-380 words, dense academic prose with sophisticated vocabulary.
 2. 4 True/False/Not Given questions testing subtle distinctions, paraphrasing, and qualifiers.
-3. For each question, provide:
+3. CRITICAL: ANSWER RANDOMIZATION & UNPREDICTABILITY:
+   - Do NOT arrange the answers in a predictable sequence (e.g. NEVER do TRUE, FALSE, NOT GIVEN in order, and NEVER put NOT GIVEN always at the end).
+   - Randomize the order of answers across the 4 questions (for example: NOT GIVEN, TRUE, FALSE, TRUE or FALSE, NOT GIVEN, TRUE, FALSE or TRUE, NOT GIVEN, FALSE, FALSE).
+   - Ensure a balanced mix of TRUE, FALSE, and NOT GIVEN across the 4 questions.
+4. For each question, provide:
    - 'prompt': The question statement.
    - 'options': ['TRUE', 'FALSE', 'NOT GIVEN']
-   - 'answer': 'TRUE', 'FALSE', or 'NOT GIVEN'
+   - 'answer': 'TRUE', 'FALSE', or 'NOT GIVEN' (following the randomized distribution)
    - 'explanation': Clear explanation in Turkish explaining WHY it is the answer.
    - 'trick_tip': A Cambridge tip or trap warning (in Turkish).
 
@@ -228,6 +232,30 @@ Return ONLY valid JSON with this exact structure:
   "questions": [
     {{
       "id": "q1",
+      "prompt": "Statement...",
+      "options": ["TRUE", "FALSE", "NOT GIVEN"],
+      "answer": "NOT GIVEN",
+      "explanation": "Açıklama...",
+      "trick_tip": "Taktik..."
+    }},
+    {{
+      "id": "q2",
+      "prompt": "Statement...",
+      "options": ["TRUE", "FALSE", "NOT GIVEN"],
+      "answer": "TRUE",
+      "explanation": "Açıklama...",
+      "trick_tip": "Taktik..."
+    }},
+    {{
+      "id": "q3",
+      "prompt": "Statement...",
+      "options": ["TRUE", "FALSE", "NOT GIVEN"],
+      "answer": "FALSE",
+      "explanation": "Açıklama...",
+      "trick_tip": "Taktik..."
+    }},
+    {{
+      "id": "q4",
       "prompt": "Statement...",
       "options": ["TRUE", "FALSE", "NOT GIVEN"],
       "answer": "TRUE",

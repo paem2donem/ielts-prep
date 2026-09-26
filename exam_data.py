@@ -119,35 +119,35 @@ To mitigate such evidentiary challenges, forensic practitioners must demonstrate
                 "questions": [
                     {
                         "id": "cr_q1",
-                        "prompt": "1. ISO/IEC 27037 guidelines were primarily developed for static storage media rather than live cloud triage.",
+                        "prompt": "1. The majority of European judges prefer MD5 hashing over SHA-256 for judicial admissibility.",
+                        "type": "tfng",
+                        "options": ["TRUE", "FALSE", "NOT GIVEN"],
+                        "answer": "NOT GIVEN",
+                        "explanation": "Metinde Avrupalı hakimlerin delil kabulünde hangi hash algoritmasını tercih ettiği hakkında hiçbir bilgi verilmemiştir."
+                    },
+                    {
+                        "id": "cr_q2",
+                        "prompt": "2. ISO/IEC 27037 guidelines were primarily developed for static storage media rather than live cloud triage.",
                         "type": "tfng",
                         "options": ["TRUE", "FALSE", "NOT GIVEN"],
                         "answer": "TRUE",
                         "explanation": "Metin geleneksel statik sürücü protokollerinin ISO/IEC 27037 altında resmileştirildiğini doğrular."
                     },
                     {
-                        "id": "cr_q2",
-                        "prompt": "2. Disconnecting power from a computer infected with fileless malware ensures safe recovery of decryption keys.",
+                        "id": "cr_q3",
+                        "prompt": "3. Live forensic analysis inevitably causes slight state modifications on the inspected host system.",
+                        "type": "tfng",
+                        "options": ["TRUE", "FALSE", "NOT GIVEN"],
+                        "answer": "TRUE",
+                        "explanation": "Metinde 'Live forensic acquisition requires... inevitably introducing minuscule modifications to the target host' ifadesi açıkça yer almaktadır."
+                    },
+                    {
+                        "id": "cr_q4",
+                        "prompt": "4. Disconnecting electrical power from a computer infected with fileless malware ensures safe recovery of decryption keys.",
                         "type": "tfng",
                         "options": ["TRUE", "FALSE", "NOT GIVEN"],
                         "answer": "FALSE",
                         "explanation": "Metinde sistemin gücünü kesmenin RAM'deki uçucu anahtarları kalıcı olarak yok edeceği (irreversibly lost) belirtilmiştir."
-                    },
-                    {
-                        "id": "cr_q3",
-                        "prompt": "3. The majority of European judges prefer MD5 hashing over SHA-256 for judicial admissibility.",
-                        "type": "tfng",
-                        "options": ["TRUE", "FALSE", "NOT GIVEN"],
-                        "answer": "NOT GIVEN",
-                        "explanation": "Avrupalı hakimlerin tercihleri hakkında metinde bir bilgi verilmemiştir."
-                    },
-                    {
-                        "id": "cr_q4",
-                        "prompt": "4. Live forensic analysis inevitably causes slight state modifications on the inspected system.",
-                        "type": "tfng",
-                        "options": ["TRUE", "FALSE", "NOT GIVEN"],
-                        "answer": "TRUE",
-                        "explanation": "Metinde 'inevitably introducing minuscule modifications to the target host' ifadesi açıkça yer almaktadır."
                     }
                 ]
             },
@@ -163,35 +163,35 @@ Once a raw memory image is secured, analysts employ open-source forensic framewo
                 "questions": [
                     {
                         "id": "cr2_q1",
-                        "prompt": "1. APT groups frequently inject malicious code into legitimate system processes to avoid disk artifacts.",
-                        "type": "tfng",
-                        "options": ["TRUE", "FALSE", "NOT GIVEN"],
-                        "answer": "TRUE",
-                        "explanation": "Metinde APT gruplarının meşru süreçlere kod enjekte ederek diskte kalıcı iz bırakmadığı belirtilmiştir."
-                    },
-                    {
-                        "id": "cr2_q2",
-                        "prompt": "2. Operating system RAM retains unencrypted cryptographic keys and active network connections.",
-                        "type": "tfng",
-                        "options": ["TRUE", "FALSE", "NOT GIVEN"],
-                        "answer": "TRUE",
-                        "explanation": "Metinde RAM'in şifrelenmemiş kriptografik anahtarları ve aktif ağ soketlerini barındırdığı doğrulanmıştır."
-                    },
-                    {
-                        "id": "cr2_q3",
-                        "prompt": "3. Live memory acquisition with tools like LiME causes zero modification to the host's physical RAM.",
+                        "prompt": "1. Live memory acquisition with utilities like LiME causes zero alteration to the host's physical RAM.",
                         "type": "tfng",
                         "options": ["TRUE", "FALSE", "NOT GIVEN"],
                         "answer": "FALSE",
                         "explanation": "Metinde canlı sistem üzerinde çalışan yazılımların ayrılmamış RAM sayfalarında mutlaka değişiklik yapacağı ('necessarily alters unallocated RAM pages') ifade edilmiştir."
                     },
                     {
-                        "id": "cr2_q4",
-                        "prompt": "4. Volatility framework can only be utilized by accredited government intelligence agencies.",
+                        "id": "cr2_q2",
+                        "prompt": "2. The Volatility framework is exclusively restricted to accredited government intelligence agencies.",
                         "type": "tfng",
                         "options": ["TRUE", "FALSE", "NOT GIVEN"],
                         "answer": "NOT GIVEN",
-                        "explanation": "Metinde Volatility'nin açık kaynaklı bir araç olduğu söylenmiş, kimlerin kullanabileceğine dair bir kısıtlama verilmemiştir."
+                        "explanation": "Metinde Volatility'nin açık kaynaklı bir araç olduğu söylenmiş, kullanımının sadece istihbarat kurumlarına kısıtlandığına dair bir bilgi verilmemiştir."
+                    },
+                    {
+                        "id": "cr2_q3",
+                        "prompt": "3. APT groups frequently inject malicious code into legitimate system processes to avoid leaving disk artifacts.",
+                        "type": "tfng",
+                        "options": ["TRUE", "FALSE", "NOT GIVEN"],
+                        "answer": "TRUE",
+                        "explanation": "Metinde APT gruplarının meşru süreçlere kod enjekte ederek diskte kalıcı iz bırakmadığı belirtilmiştir."
+                    },
+                    {
+                        "id": "cr2_q4",
+                        "prompt": "4. Operating system RAM retains unencrypted cryptographic keys and active network connections.",
+                        "type": "tfng",
+                        "options": ["TRUE", "FALSE", "NOT GIVEN"],
+                        "answer": "TRUE",
+                        "explanation": "Metinde RAM'in şifrelenmemiş kriptografik anahtarları ve aktif ağ soketlerini barındırdığı doğrulanmıştır."
                     }
                 ]
             }
@@ -419,35 +419,35 @@ Despite these compelling advantages, commercial vertical farming confronts formi
                 "questions": [
                     {
                         "id": "c18r_q1",
-                        "prompt": "1. Vertical farming requires significantly less water than traditional open-field farming methods.",
+                        "prompt": "1. Government subsidies for urban vertical farms were increased following international climate agreements.",
+                        "type": "tfng",
+                        "options": ["TRUE", "FALSE", "NOT GIVEN"],
+                        "answer": "NOT GIVEN",
+                        "explanation": "Metinde dikey tarıma yönelik herhangi bir hükümet sübvansiyonu veya teşviki hakkında bilgi yer almamaktadır."
+                    },
+                    {
+                        "id": "c18r_q2",
+                        "prompt": "2. Vertical farming requires significantly less water than traditional open-field farming methods.",
                         "type": "tfng",
                         "options": ["TRUE", "FALSE", "NOT GIVEN"],
                         "answer": "TRUE",
                         "explanation": "Metinde geleneksel tarıma kıyasla %95'e varan su tasarrufu sağladığı ('reducing agricultural water consumption by up to ninety-five percent compared to conventional open-field cultivation') açıkça doğrulanmıştır."
                     },
                     {
-                        "id": "c18r_q2",
-                        "prompt": "2. High-intensity LED illumination makes vertical farming carbon-neutral regardless of how electricity is produced.",
+                        "id": "c18r_q3",
+                        "prompt": "3. High-intensity LED illumination makes vertical farming carbon-neutral regardless of how electricity is produced.",
                         "type": "tfng",
                         "options": ["TRUE", "FALSE", "NOT GIVEN"],
                         "answer": "FALSE",
                         "explanation": "Metinde elektrik şebekesi yenilenebilir enerjiye geçmedikçe dikey tarımın karbon ayak izinin geleneksel tarımı bile aşabileceği ('carbon footprint may inadvertently exceed that of rural transport-based produce') belirtilmiştir."
                     },
                     {
-                        "id": "c18r_q3",
-                        "prompt": "3. Vertical farms currently produce the majority of wheat consumed in major European metropolises.",
+                        "id": "c18r_q4",
+                        "prompt": "4. Vertical farms currently produce the majority of wheat and maize consumed in major European metropolises.",
                         "type": "tfng",
                         "options": ["TRUE", "FALSE", "NOT GIVEN"],
                         "answer": "FALSE",
                         "explanation": "Metnin sonunda buğday ve mısır gibi temel tahılların dikey tarımda üretilmesinin henüz uygulanamaz olduğu ('staple carbohydrate crops like wheat and maize remain unfeasible') ifade edilmiştir."
-                    },
-                    {
-                        "id": "c18r_q4",
-                        "prompt": "4. Government subsidies for urban vertical farms were increased following international climate agreements.",
-                        "type": "tfng",
-                        "options": ["TRUE", "FALSE", "NOT GIVEN"],
-                        "answer": "NOT GIVEN",
-                        "explanation": "Metinde devlet teşvikleri veya sübvansiyonlar hakkında hiçbir bilgi verilmemiştir."
                     }
                 ]
             },
@@ -463,35 +463,35 @@ The line was constructed using the rudimentary 'cut-and-cover' engineering techn
                 "questions": [
                     {
                         "id": "c17r_q1",
-                        "prompt": "1. In early Victorian London, steam locomotives were legally banned from entering the historic centre of the city.",
-                        "type": "tfng",
-                        "options": ["TRUE", "FALSE", "NOT GIVEN"],
-                        "answer": "TRUE",
-                        "explanation": "Metinde 'parliamentary legislation prohibited steam locomotives from penetrating the urban core' ifadesi bu yasağı doğrudan doğrular."
-                    },
-                    {
-                        "id": "c17r_q2",
-                        "prompt": "2. Charles Pearson faced immediate financial support and acclaim when he first proposed the underground railway.",
+                        "prompt": "1. Charles Pearson faced immediate financial support and acclaim when he first proposed the underground railway.",
                         "type": "tfng",
                         "options": ["TRUE", "FALSE", "NOT GIVEN"],
                         "answer": "FALSE",
                         "explanation": "Metinde önerinin ilk başta basında alay konusu olduğu ve yatırımcıların şüpheyle yaklaştığı ('widespread ridicule and scepticism') belirtilmiştir."
                     },
                     {
-                        "id": "c17r_q3",
-                        "prompt": "3. The 'cut-and-cover' method allowed underground tunnels to be constructed without disturbing the street surface above.",
+                        "id": "c17r_q2",
+                        "prompt": "2. In early Victorian London, steam locomotives were legally banned from entering the historic centre of the city.",
                         "type": "tfng",
                         "options": ["TRUE", "FALSE", "NOT GIVEN"],
-                        "answer": "FALSE",
-                        "explanation": "Metinde mevcut sokakların boyunca hendekler kazılarak caddelerin bozulduğu ve sonradan üzerlerinin yeniden inşa edildiği ('expansive trench was excavated along existing public streets') belirtilmiştir."
+                        "answer": "TRUE",
+                        "explanation": "Metinde 'parliamentary legislation prohibited steam locomotives from penetrating the urban core' ifadesi bu yasağı doğrudan doğrular."
                     },
                     {
-                        "id": "c17r_q4",
-                        "prompt": "4. Subsequent ventilation shafts successfully eliminated all sulfurous odors from the tunnels within six months.",
+                        "id": "c17r_q3",
+                        "prompt": "3. Subsequent ventilation shafts successfully eliminated all sulfurous odors from the tunnels within six months.",
                         "type": "tfng",
                         "options": ["TRUE", "FALSE", "NOT GIVEN"],
                         "answer": "NOT GIVEN",
                         "explanation": "Metinde havalandırma bacalarının altı ay içinde tüm dumanı yok ettiğine dair hiçbir bilgi yer almamaktadır."
+                    },
+                    {
+                        "id": "c17r_q4",
+                        "prompt": "4. The 'cut-and-cover' method allowed underground tunnels to be constructed without disturbing the street surface above.",
+                        "type": "tfng",
+                        "options": ["TRUE", "FALSE", "NOT GIVEN"],
+                        "answer": "FALSE",
+                        "explanation": "Metinde mevcut sokakların boyunca hendekler kazılarak caddelerin bozulduğu ve sonradan üzerlerinin yeniden inşa edildiği ('expansive trench was excavated along existing public streets') belirtilmiştir."
                     }
                 ]
             },
@@ -507,35 +507,35 @@ Alternative technologies are consequently gathering significant momentum. Pumped
                 "questions": [
                     {
                         "id": "ar_q1",
-                        "prompt": "1. The manufacturing cost of solar panels has risen steeply over the last decade.",
-                        "type": "tfng",
-                        "options": ["TRUE", "FALSE", "NOT GIVEN"],
-                        "answer": "FALSE",
-                        "explanation": "Metinde maliyetin yüzde seksenin üzerinde düştüğü (plummeted by more than eighty percent) belirtilmiştir."
-                    },
-                    {
-                        "id": "ar_q2",
-                        "prompt": "2. Lithium-ion batteries are universally considered the optimal solution for multi-day seasonal grid storage.",
-                        "type": "tfng",
-                        "options": ["TRUE", "FALSE", "NOT GIVEN"],
-                        "answer": "FALSE",
-                        "explanation": "Metinde lityum-iyon pillerin çok günlük mevsimsel depolamadaki yeri 'contentious' (tartışmalı) olarak tanımlanmıştır."
-                    },
-                    {
-                        "id": "ar_q3",
-                        "prompt": "3. Pumped-storage hydroelectricity currently generates the vast majority of worldwide stored energy.",
+                        "prompt": "1. Pumped-storage hydroelectricity currently generates the vast majority of worldwide stored energy.",
                         "type": "tfng",
                         "options": ["TRUE", "FALSE", "NOT GIVEN"],
                         "answer": "TRUE",
                         "explanation": "Metinde 'accounts for over ninety percent of global storage capacity' ifadesi yer almaktadır."
                     },
                     {
-                        "id": "ar_q4",
-                        "prompt": "4. Vanadium flow batteries lose half of their energy storage capacity after three years of active use.",
+                        "id": "ar_q2",
+                        "prompt": "2. Vanadium flow batteries lose half of their energy storage capacity after three years of active use.",
                         "type": "tfng",
                         "options": ["TRUE", "FALSE", "NOT GIVEN"],
                         "answer": "NOT GIVEN",
                         "explanation": "Metinde vanadyum pillerin süresiz döngü ömrüne sahip olduğu söylenmiş ancak 3 yıl içinde kapasite kaybı verisine değinilmemiştir."
+                    },
+                    {
+                        "id": "ar_q3",
+                        "prompt": "3. The manufacturing cost of solar panels has risen steeply over the last decade.",
+                        "type": "tfng",
+                        "options": ["TRUE", "FALSE", "NOT GIVEN"],
+                        "answer": "FALSE",
+                        "explanation": "Metinde maliyetin yüzde seksenin üzerinde düştüğü (plummeted by more than eighty percent) belirtilmiştir."
+                    },
+                    {
+                        "id": "ar_q4",
+                        "prompt": "4. Lithium-ion batteries are universally considered the optimal solution for multi-day seasonal grid storage.",
+                        "type": "tfng",
+                        "options": ["TRUE", "FALSE", "NOT GIVEN"],
+                        "answer": "FALSE",
+                        "explanation": "Metinde lityum-iyon pillerin çok günlük mevsimsel depolamadaki yeri 'contentious' (tartışmalı) olarak tanımlanmıştır."
                     }
                 ]
             }
