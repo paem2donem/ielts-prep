@@ -4,11 +4,26 @@
    Question Bank, Error Notebook, Cambridge Tricks, Timers & Analytics
    =================================================================== */
 
+// Safe Storage Helpers (protects incognito & mobile WebViews)
+function safeGetStorage(key, defaultVal) {
+  try {
+    const val = localStorage.getItem(key);
+    return val !== null ? val : defaultVal;
+  } catch (e) {
+    return defaultVal;
+  }
+}
+function safeSetStorage(key, val) {
+  try {
+    localStorage.setItem(key, val);
+  } catch (e) {}
+}
+
 // Global State
 const state = {
   currentUser: {
-    email: localStorage.getItem('forensync_user_email') || 'paem2.donem@gmail.com',
-    name: localStorage.getItem('forensync_user_name') || 'Aday'
+    email: safeGetStorage('forensync_user_email', 'paem2.donem@gmail.com'),
+    name: safeGetStorage('forensync_user_name', 'Aday')
   },
   currentMode: 'cyber', // 'cyber' or 'academic'
   currentModule: 'writing',
@@ -35,8 +50,8 @@ const state = {
   isPlaying: false
 };
 
-// DOM Content Loaded
-document.addEventListener('DOMContentLoaded', async () => {
+// Robust Application Launcher (executes regardless of DOMContentLoaded timing)
+function startApp() {
   initAuthUI();
   initNavigation();
   initModeSwitcher();
@@ -47,11 +62,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   initQuestionBankEvents();
   
   // Initial load
-  await switchMode('cyber');
+  switchMode('cyber');
   loadAnalytics();
   loadTricks();
   loadMistakes();
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', startApp);
+} else {
+  startApp();
+}
 
 /* ================= Auth & User Profile ================= */
 function initAuthUI() {
