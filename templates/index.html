@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#090d16">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>ForenSync Academy - IELTS & Cyber Prep Suite</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+  <!-- Top App Header -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="brand-section">
+        <div class="brand-icon">🛡️</div>
+        <div>
+          <div class="brand-title">ForenSync Academy</div>
+          <div class="brand-subtitle">IELTS 7.5+ & Jean Monnet Prep</div>
+        </div>
+      </div>
+
+      <!-- Mode Toggle Switcher -->
+      <div class="mode-toggle-group">
+        <button id="btn-mode-cyber" class="mode-btn active" title="Europol & Jean Monnet Cyber Forensics Focus">
+          <span>⚡</span> Cyber Mode
+        </button>
+        <button id="btn-mode-academic" class="mode-btn" title="General Cambridge IELTS Academic Focus">
+          <span>🎓</span> Academic Mode
+        </button>
+      </div>
+
+      <!-- Desktop Navigation Tabs -->
+      <nav class="desktop-nav">
+        <button class="nav-item active" data-module-target="writing">✍️ Writing</button>
+        <button class="nav-item" data-module-target="speaking">🎙️ Speaking</button>
+        <button class="nav-item" data-module-target="reading">📖 Reading</button>
+        <button class="nav-item" data-module-target="listening">🎧 Listening</button>
+        <button class="nav-item" data-module-target="mentor">🧠 AI Mentor</button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Viewports -->
+  <main class="main-content">
+
+    <!-- ================= PANEL 1: WRITING ================= -->
+    <section id="panel-writing" class="panel-view active">
+      <div class="card">
+        <div class="card-title">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <span>✍️</span> IELTS Writing Studio
+            <div style="display: flex; gap: 6px; margin-left: 12px;">
+              <button id="btn-writing-task1" class="btn btn-outline" style="padding: 4px 12px; min-height: 32px; font-size: 0.8rem;">Task 1 (150w)</button>
+              <button id="btn-writing-task2" class="btn btn-outline active" style="padding: 4px 12px; min-height: 32px; font-size: 0.8rem; background: rgba(56, 189, 248, 0.2); border-color: var(--accent-cyan); color: var(--accent-cyan);">Task 2 (250w)</button>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <span id="timer-display-writing" style="font-family: var(--font-mono); font-weight: 700; color: var(--accent-cyan); font-size: 1.1rem;">60:00</span>
+            <button id="btn-timer-writing" class="btn btn-outline" style="padding: 4px 10px; min-height: 32px; font-size: 0.8rem;">▶ Start Timer</button>
+          </div>
+        </div>
+
+        <div id="writing-task-title" style="font-weight: 600; color: var(--accent-cyan); margin-top: 6px;">Task 2 (Essay - 250 Words)</div>
+        <div id="writing-prompt-text" class="card" style="margin-top: 10px; font-size: 0.95rem; line-height: 1.6; border-left: 3px solid var(--accent-cyan); background: rgba(15, 23, 42, 0.5);">
+          Loading prompt...
+        </div>
+
+        <div class="writing-layout">
+          <div>
+            <textarea id="essay-input" class="essay-editor" placeholder="Type your academic essay here... (Live word counter tracks your progress)"></textarea>
+            <div class="word-count-bar">
+              <span id="writing-word-count" style="font-weight: 600; color: var(--text-muted);">0 / 250 words</span>
+              <span style="color: var(--text-dim); font-size: 0.8rem;">Autosaved locally</span>
+            </div>
+            <button id="btn-submit-writing" class="btn btn-primary" style="width: 100%;">
+              🚀 Submit to AI Examiner
+            </button>
+          </div>
+          <div id="writing-feedback-area">
+            <div class="card" style="text-align: center; color: var(--text-dim); padding: 40px 20px;">
+              Your Cambridge/Jean Monnet examiner report will appear here upon submission.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= PANEL 2: SPEAKING ================= -->
+    <section id="panel-speaking" class="panel-view">
+      <div class="card">
+        <div class="card-title">
+          <div><span>🎙️</span> IELTS Speaking Booth</div>
+          <div class="badge badge-purple">Multimodal Voice AI</div>
+        </div>
+        <div class="card-desc">Practice Part 2 Cue Cards with live preparation countdown and microphone speech analysis.</div>
+
+        <div class="writing-layout">
+          <div>
+            <div id="speaking-cue-card-box">
+              Loading speaking card...
+            </div>
+
+            <!-- Prep Timer -->
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: rgba(0,0,0,0.25); border-radius: var(--radius-sm); margin-bottom: 20px;">
+              <div>
+                <div style="font-size: 0.8rem; color: var(--text-dim); text-transform: uppercase;">1-Minute Candidate Preparation</div>
+                <div id="speaking-prep-display" style="font-family: var(--font-mono); font-size: 1.3rem; font-weight: 700; color: var(--accent-cyan);">01:00</div>
+              </div>
+              <button id="btn-speaking-prep-timer" class="btn btn-outline" style="min-height: 36px; padding: 6px 14px;">▶ Start Prep Timer</button>
+            </div>
+
+            <!-- Audio Recording Pod -->
+            <div class="recording-pod">
+              <button id="btn-record-speaking" class="record-circle-btn" title="Click to Record">
+                🎙️
+              </button>
+              <div id="speaking-record-time" style="font-family: var(--font-mono); font-size: 1.4rem; font-weight: 700; margin-bottom: 8px;">00:00</div>
+              <div style="font-size: 0.85rem; color: var(--text-muted); max-width: 320px;">
+                Tap the microphone button to start speaking. Speak clearly for 1 to 2 minutes. Tap again to stop.
+              </div>
+
+              <audio id="speaking-audio-preview" controls style="display: none; margin-top: 16px; width: 100%; max-width: 340px;"></audio>
+            </div>
+
+            <button id="btn-submit-speaking" class="btn btn-primary" style="width: 100%;" disabled>
+              🎧 Submit Recording to AI Examiner
+            </button>
+          </div>
+
+          <div id="speaking-feedback-area">
+            <div class="card" style="text-align: center; color: var(--text-dim); padding: 40px 20px;">
+              Your spoken transcript, pronunciation evaluation, and Band Score will be presented here.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= PANEL 3: READING ================= -->
+    <section id="panel-reading" class="panel-view">
+      <div class="card">
+        <div class="card-title">
+          <div><span>📖</span> Academic Reading Arena</div>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <span id="timer-display-reading" style="font-family: var(--font-mono); font-weight: 700; color: var(--accent-cyan); font-size: 1.1rem;">60:00</span>
+            <button id="btn-timer-reading" class="btn btn-outline" style="padding: 4px 10px; min-height: 32px; font-size: 0.8rem;">▶ Start Timer</button>
+          </div>
+        </div>
+        <div class="card-desc">Authentic Cambridge IELTS Reading Passages with instant automated grading and answer explanations.</div>
+
+        <!-- Mobile View Switcher for Reading -->
+        <div class="mobile-reading-toggle">
+          <button id="mobile-toggle-passage" class="btn btn-outline active" style="flex:1;">📄 Passage</button>
+          <button id="mobile-toggle-questions" class="btn btn-outline" style="flex:1;">📝 Questions</button>
+        </div>
+
+        <div class="reading-layout">
+          <!-- Column 1: Passage -->
+          <div id="reading-passage-column">
+            <div class="passage-box">
+              <h3 id="reading-passage-title" style="color: var(--accent-cyan); margin-bottom: 16px;">Passage Title</h3>
+              <div id="reading-passage-text">Loading reading passage...</div>
+            </div>
+          </div>
+
+          <!-- Column 2: Questions -->
+          <div id="reading-questions-column">
+            <div style="font-weight: 700; margin-bottom: 12px; color: var(--text-main);">Questions 1-4 (True / False / Not Given)</div>
+            <div id="reading-questions-container">
+              Loading questions...
+            </div>
+            <button id="btn-submit-reading" class="btn btn-primary" style="width: 100%; margin-top: 14px;">
+              📝 Submit & Grade Reading
+            </button>
+            <div id="reading-feedback-area" style="margin-top: 16px;"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= PANEL 4: LISTENING ================= -->
+    <section id="panel-listening" class="panel-view">
+      <div class="card">
+        <div class="card-title">
+          <div><span>🎧</span> Interactive Listening Station</div>
+          <div class="badge badge-cyan">Gemini Audio TTS Engine</div>
+        </div>
+        <div class="card-desc">Listen to international English speakers and fill out the official answer sheet.</div>
+
+        <!-- Audio Player Card -->
+        <div class="audio-station">
+          <div class="player-controls">
+            <button id="btn-play-listening" class="play-pause-btn">▶</button>
+            <div class="track-info">
+              <div id="listening-section-title" style="font-weight: 700; color: #ffffff;">Section 1</div>
+              <div id="track-title" style="font-size: 0.8rem; color: var(--accent-cyan);">Audio ready</div>
+              <div class="track-progress">
+                <div id="listening-progress-bar" class="track-bar"></div>
+              </div>
+            </div>
+          </div>
+          <div id="listening-section-intro" style="font-size: 0.85rem; color: var(--text-muted); margin-top: 12px; font-style: italic;">
+            Loading audio context...
+          </div>
+        </div>
+
+        <div class="reading-layout">
+          <div>
+            <div style="font-weight: 700; margin-bottom: 12px; color: var(--text-main);">Questions & Answer Sheet:</div>
+            <div id="listening-questions-container">
+              Loading listening questions...
+            </div>
+            <button id="btn-submit-listening" class="btn btn-primary" style="width: 100%; margin-top: 14px;">
+              📝 Submit & Grade Listening
+            </button>
+          </div>
+          <div id="listening-feedback-area">
+            <div class="card" style="text-align: center; color: var(--text-dim); padding: 40px 20px;">
+              Your listening score and detailed answer keys will be shown here.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= PANEL 5: AI MENTOR & ANALYTICS ================= -->
+    <section id="panel-mentor" class="panel-view">
+      <div class="card">
+        <div class="card-title">
+          <div><span>🧠</span> AI Mentor & Performance Intelligence</div>
+          <button id="btn-generate-mentor" class="btn btn-primary" style="min-height: 36px; padding: 6px 14px; font-size: 0.85rem;">
+            🔄 Update Today's AI Action Plan
+          </button>
+        </div>
+        <div class="card-desc">Tracks your multi-skill score velocity and generates custom micro-learning schedules tailored to Jean Monnet & Cambridge criteria.</div>
+
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+          <div class="stat-box">
+            <div id="stat-total-tests" class="stat-num">0</div>
+            <div class="stat-label">Tests Completed</div>
+          </div>
+          <div class="stat-box">
+            <div id="stat-overall-avg" class="stat-num">0.0</div>
+            <div class="stat-label">Overall Average</div>
+          </div>
+          <div class="stat-box">
+            <div id="stat-writing-avg" class="stat-num">-</div>
+            <div class="stat-label">Writing Average</div>
+          </div>
+          <div class="stat-box">
+            <div id="stat-speaking-avg" class="stat-num">-</div>
+            <div class="stat-label">Speaking Average</div>
+          </div>
+        </div>
+
+        <!-- Chart and Mentor Recommendations -->
+        <div class="reading-layout" style="margin-bottom: 24px;">
+          <div class="card" style="margin-bottom: 0;">
+            <div style="font-weight: 700; margin-bottom: 14px; color: var(--accent-cyan);">Skill Balance (0 - 9.0 Band Scale)</div>
+            <canvas id="analytics-chart" width="360" height="240" style="width: 100%; height: auto; max-height: 240px;"></canvas>
+          </div>
+
+          <div id="mentor-report-area">
+            <div class="card" style="margin-bottom: 0; text-align: center; color: var(--text-dim); padding: 40px 20px;">
+              Click 'Update Today's AI Action Plan' to receive your daily tailored Jean Monnet strategy report.
+            </div>
+          </div>
+        </div>
+
+        <!-- History Table -->
+        <div class="card">
+          <div style="font-weight: 700; margin-bottom: 12px; color: var(--text-main);">Recent Test Submissions</div>
+          <div class="table-responsive">
+            <table class="custom-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Mode</th>
+                  <th>Module</th>
+                  <th>Task Type</th>
+                  <th>Band Score</th>
+                </tr>
+              </thead>
+              <tbody id="history-table-body">
+                <tr><td colspan="5" style="text-align: center; padding: 20px;">Loading history...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Mobile Bottom Navigation Bar -->
+  <nav class="bottom-nav">
+    <button class="mobile-nav-btn active" data-module-target="writing">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+      <span>Writing</span>
+    </button>
+    <button class="mobile-nav-btn" data-module-target="speaking">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/></svg>
+      <span>Speaking</span>
+    </button>
+    <button class="mobile-nav-btn" data-module-target="reading">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
+      <span>Reading</span>
+    </button>
+    <button class="mobile-nav-btn" data-module-target="listening">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M3 18v-6a9 9 0 0118 0v6"/><path d="M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3zM3 19a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3z"/></svg>
+      <span>Listening</span>
+    </button>
+    <button class="mobile-nav-btn" data-module-target="mentor">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M12 2a10 10 0 100 20 10 10 0 000-20z"/><path d="M12 6v6l4 2"/></svg>
+      <span>Mentor</span>
+    </button>
+  </nav>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

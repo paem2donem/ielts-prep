@@ -1,0 +1,26 @@
+# Environment and Secrets (CRITICAL: Do NOT remove)
+.env
+.env.local
+
+# SQLite Database (Keep user data private and persistent on server)
+tracker.db
+tracker.db-journal
+
+# Python Bytecode and Caches
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+
+# Audio Cache
+static/audio/*.wav
+!static/audio/.gitkeep
+
+# System and Editor Files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log
+nginx_server.conf
