@@ -53,7 +53,7 @@
         <button class="nav-item" data-module-target="tricks">💡 Taktikler & Hileler</button>
         <button class="nav-item" data-module-target="mistakes">❌ Yanlış Defteri</button>
         <button class="nav-item" data-module-target="mentor">🧠 AI Mentor</button>
-        <button class="nav-item" data-module-target="bank">📂 Soru Bankası</button>
+        <button class="nav-item" data-module-target="bank">🗄️ Database</button>
       </nav>
     </div>
   </header>
@@ -383,14 +383,14 @@
           </div>
         </div>
 
-        <!-- Question Bank Quick Access Banner -->
+        <!-- Database Quick Access Banner -->
         <div style="display: flex; align-items: center; justify-content: space-between; background: linear-gradient(135deg, rgba(30, 41, 59, 0.7), rgba(15, 23, 42, 0.9)); border: 1px solid var(--border-glass); border-left: 4px solid var(--accent-cyan); padding: 14px 18px; border-radius: 8px; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
           <div>
-            <div style="font-weight: 700; color: #ffffff; font-size: 1rem;">📂 Veritabanındaki Tüm Sınav Soruları (Soru Bankası)</div>
-            <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 2px;">Cambridge 18, 17, Jean Monnet ve AI üretimi tüm soruları tablo olarak listeleyin, doğru cevapları ve çözümleri inceleyin.</div>
+            <div style="font-weight: 700; color: #ffffff; font-size: 1rem;">🗄️ Sınav ve Soru Veritabanı (Database)</div>
+            <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 2px;">Cambridge 18, 17, Jean Monnet ve AI üretimi tüm soruları, metinleri ve tüm doğru cevapları inceleyin.</div>
           </div>
           <button id="btn-goto-bank" class="btn btn-outline" style="border-color: var(--accent-cyan); color: var(--accent-cyan); padding: 6px 16px;">
-            📚 Soru Bankasını Aç (Tablo)
+            🗄️ Database'i Aç (Tüm Sorular & Cevaplar)
           </button>
         </div>
 
@@ -417,21 +417,21 @@
       </div>
     </section>
 
-    <!-- ================= PANEL 8: QUESTION BANK ================= -->
+    <!-- ================= PANEL 8: DATABASE ================= -->
     <section id="panel-bank" class="panel-view">
       <div class="card">
         <div class="card-title">
           <div style="display: flex; align-items: center; gap: 10px;">
-            <span>📂</span> IELTS Soru Bankası & Veritabanı
+            <span>🗄️</span> IELTS Sınav & Soru Veritabanı (Database)
           </div>
           <div class="badge badge-cyan" id="bank-total-count-badge">Yükleniyor...</div>
         </div>
-        <div class="card-desc">Veritabanında kayıtlı tüm Cambridge, Adli Bilişim ve AI üretimi sorular. Filtreleyin, arayın ve soru içeriği ile doğru cevabı detaylıca inceleyin.</div>
+        <div class="card-desc">Veritabanında kayıtlı tüm Cambridge, Adli Bilişim ve AI üretimi sınavlar ve sorular. İster sınav bazında tüm soruları ve cevapları bir arada görüntüleyin, ister tablo formatında inceleyin.</div>
 
         <!-- Filter and Search Bar -->
-        <div style="display: flex; gap: 10px; margin-top: 14px; margin-bottom: 16px; flex-wrap: wrap; background: rgba(15, 23, 42, 0.4); padding: 12px; border-radius: 8px; border: 1px solid var(--border-glass);">
+        <div style="display: flex; gap: 10px; margin-top: 14px; margin-bottom: 14px; flex-wrap: wrap; background: rgba(15, 23, 42, 0.4); padding: 12px; border-radius: 8px; border: 1px solid var(--border-glass);">
           <div style="flex: 1; min-width: 200px;">
-            <input type="text" id="bank-search-input" class="input-fill" placeholder="🔍 Soru kökü, sınav adı veya anahtar kelime ara..." style="width: 100%;">
+            <input type="text" id="bank-search-input" class="input-fill" placeholder="🔍 Soru kökü, sınav adı, cevap veya anahtar kelime ara..." style="width: 100%;">
           </div>
           <div style="display: flex; gap: 8px; flex-wrap: wrap;">
             <select id="bank-filter-module" class="input-fill" style="padding: 6px 12px; font-size: 0.85rem; border-radius: 6px;">
@@ -450,21 +450,37 @@
           </div>
         </div>
 
-        <!-- Questions Table -->
-        <div class="table-responsive">
+        <!-- View Mode Switcher -->
+        <div style="display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap;">
+          <button id="btn-bank-view-grouped" class="btn btn-ai-magic" style="padding: 6px 14px; font-size: 0.82rem; border-radius: 6px; font-weight: 600;">
+            📑 Sınav & Pasaj Bazlı Görünüm (Tüm Sorular ve Cevaplar Bir Arada)
+          </button>
+          <button id="btn-bank-view-table" class="btn btn-outline" style="padding: 6px 14px; font-size: 0.82rem; border-radius: 6px;">
+            📊 Detaylı Tablo Listesi
+          </button>
+        </div>
+
+        <!-- Grouped View Container (Default) -->
+        <div id="bank-grouped-container" style="display: flex; flex-direction: column; gap: 16px;">
+          <div style="text-align: center; padding: 30px;"><span class="spinner"></span> Veritabanındaki sınavlar ve sorular yükleniyor...</div>
+        </div>
+
+        <!-- Questions Table Container -->
+        <div id="bank-table-container" class="table-responsive" style="display: none;">
           <table class="custom-table">
             <thead>
               <tr>
-                <th style="width: 80px;">ID</th>
-                <th style="width: 100px;">Modül</th>
+                <th style="width: 70px;">ID</th>
+                <th style="width: 90px;">Modül</th>
                 <th>Sınav / Kaynak</th>
-                <th style="width: 130px;">Soru Tipi</th>
+                <th style="width: 110px;">Soru Tipi</th>
                 <th>Soru / Görev Özeti</th>
-                <th style="width: 140px; text-align: center;">İşlem</th>
+                <th style="width: 140px; color: #10b981;">Doğru Cevap</th>
+                <th style="width: 90px; text-align: center;">Detay</th>
               </tr>
             </thead>
             <tbody id="bank-table-body">
-              <tr><td colspan="6" style="text-align: center; padding: 24px;">Soru bankası yükleniyor...</td></tr>
+              <tr><td colspan="7" style="text-align: center; padding: 24px;">Veritabanı yükleniyor...</td></tr>
             </tbody>
           </table>
         </div>
@@ -510,6 +526,12 @@
           <button id="btn-toggle-passage-content" class="btn btn-outline" style="padding: 2px 8px; font-size: 0.75rem; min-height: 24px;">Metni Göster / Gizle</button>
         </div>
         <div id="qdetail-modal-passage" style="display: none; font-size: 0.85rem; line-height: 1.6; color: var(--text-muted); max-height: 220px; overflow-y: auto; background: rgba(15, 23, 42, 0.6); padding: 10px 12px; border-radius: 6px; border: 1px solid var(--border-glass); white-space: pre-wrap;"></div>
+      </div>
+
+      <!-- Companion Questions in this Exam -->
+      <div id="qdetail-modal-companion-box" style="margin-top: 16px; border-top: 1px solid var(--border-glass); padding-top: 12px; display: none;">
+        <div style="font-size: 0.82rem; font-weight: 700; color: var(--accent-cyan); margin-bottom: 8px;">📚 Bu Sınavdaki Diğer Sorular ve Doğru Cevapları:</div>
+        <div id="qdetail-modal-companion-list" style="display: flex; flex-direction: column; gap: 8px;"></div>
       </div>
 
       <div style="margin-top: 18px; text-align: right;">

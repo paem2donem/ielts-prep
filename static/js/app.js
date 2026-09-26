@@ -1267,13 +1267,19 @@ function formatMarkdown(md) {
     .replace(/\n\n/gim, '<br><br>');
 }
 
-/* ================= Question Bank Module ================= */
+/* ================= Database (Soru ve Sınav Veritabanı) ================= */
 let bankQuestions = [];
+let bankViewMode = 'grouped'; // 'grouped' (Sınav bazlı) or 'table' (Tablo)
 
 async function loadQuestionBank() {
+  const groupedContainer = document.getElementById('bank-grouped-container');
   const tbody = document.getElementById('bank-table-body');
+  
+  if (groupedContainer) {
+    groupedContainer.innerHTML = '<div style="text-align: center; padding: 30px;"><span class="spinner"></span> Veritabanındaki sınavlar ve sorular yükleniyor...</div>';
+  }
   if (tbody) {
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 25px;"><span class="spinner"></span> Veritabanındaki sorular yükleniyor...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 25px;"><span class="spinner"></span> Veritabanı yükleniyor...</td></tr>';
   }
 
   try {
@@ -1284,18 +1290,18 @@ async function loadQuestionBank() {
     const badge = document.getElementById('bank-total-count-badge');
     if (badge) badge.textContent = `${data.total || bankQuestions.length} Soru Kayıtlı`;
 
-    renderQuestionBankTable();
+    renderQuestionBank();
   } catch (err) {
+    if (groupedContainer) {
+      groupedContainer.innerHTML = `<div class="card" style="text-align: center; color: var(--accent-rose); padding: 20px;">Hata: ${err.message}</div>`;
+    }
     if (tbody) {
-      tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--accent-rose); padding: 20px;">Hata: ${err.message}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--accent-rose); padding: 20px;">Hata: ${err.message}</td></tr>`;
     }
   }
 }
 
-function renderQuestionBankTable() {
-  const tbody = document.getElementById('bank-table-body');
-  if (!tbody) return;
-
+function renderQuestionBank() {
   const searchInput = (document.getElementById('bank-search-input')?.value || '').toLowerCase().trim();
   const moduleFilter = document.getElementById('bank-filter-module')?.value || 'all';
   const modeFilter = document.getElementById('bank-filter-mode')?.value || 'all';
@@ -1304,14 +1310,147 @@ function renderQuestionBankTable() {
     if (moduleFilter !== 'all' && q.module !== moduleFilter) return false;
     if (modeFilter !== 'all' && q.mode !== modeFilter) return false;
     if (searchInput) {
-      const haystack = `${q.id} ${q.source} ${q.prompt} ${q.answer} ${q.q_type}`.toLowerCase();
+      const haystack = `${q.id} ${q.source} ${q.prompt} ${q.answer} ${q.q_type} ${q.explanation}`.toLowerCase();
       if (!haystack.includes(searchInput)) return false;
     }
     return true;
   });
 
+  const badge = document.getElementById('bank-total-count-badge');
+  if (badge) {
+    badge.textContent = `${filtered.length} / ${bankQuestions.length} Soru Gösteriliyor`;
+  }
+
+  renderQuestionBankGrouped(filtered);
+  renderQuestionBankTable(filtered);
+}
+
+function renderQuestionBankGrouped(filtered) {
+  const container = document.getElementById('bank-grouped-container');
+  if (!container) return;
+
   if (filtered.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 25px; color: var(--text-dim);">Filtreye uygun soru bulunamadı.</td></tr>';
+    container.innerHTML = `
+      <div class="card" style="text-align: center; padding: 35px; color: var(--text-dim);">
+        🔍 Arama kriterinize uygun sınav veya soru bulunamadı.
+      </div>
+    `;
+    return;
+  }
+
+  // Group questions by unique source / passage title
+  const groupsMap = new Map();
+  filtered.forEach(q => {
+    const key = `${q.module}:::${q.source}`;
+    if (!groupsMap.has(key)) {
+      groupsMap.set(key, {
+        module: q.module,
+        mode: q.mode,
+        source: q.source,
+        passage_or_script: q.passage_or_script,
+        questions: []
+      });
+    }
+    groupsMap.get(key).questions.push(q);
+  });
+
+  const groups = Array.from(groupsMap.values());
+
+  container.innerHTML = groups.map(grp => {
+    const isReading = grp.module === 'Reading';
+    const isListening = grp.module === 'Listening';
+    const passageLabel = isReading ? '📖 Okuma Metnini (Passage Text) İncele' : (isListening ? '🎧 Dinleme Senaryosu (Audio Script) Metnini İncele' : '📄 Sınav / Görev Detayı');
+
+    const questionsHtml = grp.questions.map((q, idx) => {
+      let answerColor = '#10b981'; // green
+      if (q.answer === 'FALSE') answerColor = '#f43f5e';
+      else if (q.answer === 'NOT GIVEN') answerColor = '#f59e0b';
+      else if (q.module === 'Writing' || q.module === 'Speaking') answerColor = '#38bdf8';
+
+      return `
+        <div style="background: rgba(30, 41, 59, 0.45); border: 1px solid var(--border-glass); border-left: 3px solid ${answerColor}; padding: 12px 14px; border-radius: 6px; margin-bottom: 8px;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;">
+            <div style="font-weight: 600; color: #ffffff; font-size: 0.92rem; line-height: 1.5; flex: 1;">
+              <code style="color: var(--accent-cyan); font-size: 0.78rem; font-weight: 700; margin-right: 4px;">[${escapeHtml(q.id)}]</code>
+              ${escapeHtml(q.prompt)}
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span class="badge badge-purple" style="font-size: 0.7rem;">${escapeHtml(q.q_type)}</span>
+              <button class="btn btn-outline btn-view-question" data-qid="${escapeHtml(q.id)}" style="padding: 2px 8px; font-size: 0.72rem; min-height: 24px; border-color: var(--accent-cyan); color: var(--accent-cyan);">
+                🔍 İncele
+              </button>
+            </div>
+          </div>
+
+          <!-- Prominent Answer Box -->
+          <div style="display: flex; align-items: center; gap: 10px; margin-top: 8px; flex-wrap: wrap;">
+            <div style="font-size: 0.85rem; font-weight: 700; color: #10b981; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.35); padding: 4px 12px; border-radius: 4px; display: inline-flex; align-items: center; gap: 6px;">
+              <span>✅ Doğru Cevap:</span>
+              <span style="color: #ffffff; font-size: 0.92rem; font-weight: 800;">${escapeHtml(q.answer)}</span>
+            </div>
+            ${q.options && q.options.length ? `
+              <div style="font-size: 0.76rem; color: var(--text-dim);">
+                Seçenekler: ${q.options.map(o => `<code style="background: rgba(255,255,255,0.06); padding: 1px 6px; border-radius: 3px; margin: 0 2px; color: #cbd5e1;">${escapeHtml(o)}</code>`).join(' ')}
+              </div>
+            ` : ''}
+          </div>
+
+          ${q.explanation ? `
+            <div style="font-size: 0.82rem; color: var(--text-muted); margin-top: 6px; line-height: 1.5; background: rgba(0,0,0,0.22); padding: 6px 10px; border-radius: 4px;">
+              💡 <strong style="color: var(--accent-cyan);">Çözüm Açıklaması:</strong> ${escapeHtml(q.explanation)}
+              ${q.trick_tip ? `<br>🎯 <strong style="color: var(--accent-amber);">Cambridge Taktiği:</strong> ${escapeHtml(q.trick_tip)}` : ''}
+            </div>
+          ` : ''}
+        </div>
+      `;
+    }).join('');
+
+    return `
+      <div class="card" style="border: 1px solid var(--border-glass); background: rgba(15, 23, 42, 0.65); padding: 18px; border-radius: 8px; margin-bottom: 4px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; border-bottom: 1px solid var(--border-glass); padding-bottom: 10px;">
+          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <span class="badge ${getModuleBadge(grp.module)}">${grp.module}</span>
+            <span class="badge ${grp.mode === 'academic' ? 'badge-amber' : 'badge-cyan'}">${grp.mode === 'academic' ? 'Cambridge Academic' : 'Adli Bilişim & Cyber'}</span>
+            <strong style="color: #ffffff; font-size: 1.05rem;">${escapeHtml(grp.source)}</strong>
+          </div>
+          <span class="badge badge-emerald" style="font-size: 0.8rem; font-weight: 700;">
+            ${grp.questions.length} Soru & Cevabın Tamamı
+          </span>
+        </div>
+
+        ${grp.passage_or_script ? `
+          <details style="margin-bottom: 14px; background: rgba(0,0,0,0.25); border: 1px solid var(--border-glass); border-radius: 6px; padding: 8px 12px;">
+            <summary style="cursor: pointer; font-size: 0.82rem; color: var(--accent-cyan); font-weight: 600;">
+              ${passageLabel} (Tıklayarak Aç / Kapat)
+            </summary>
+            <div style="margin-top: 10px; font-size: 0.85rem; line-height: 1.6; color: var(--text-muted); max-height: 240px; overflow-y: auto; white-space: pre-wrap; background: rgba(15, 23, 42, 0.5); padding: 10px; border-radius: 4px;">
+              ${escapeHtml(grp.passage_or_script)}
+            </div>
+          </details>
+        ` : ''}
+
+        <div style="display: flex; flex-direction: column;">
+          ${questionsHtml}
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Attach modal click events for grouped cards
+  container.querySelectorAll('.btn-view-question').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const qid = btn.getAttribute('data-qid');
+      openQuestionDetailModal(qid);
+    });
+  });
+}
+
+function renderQuestionBankTable(filtered) {
+  const tbody = document.getElementById('bank-table-body');
+  if (!tbody) return;
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 25px; color: var(--text-dim);">Filtreye uygun soru bulunamadı.</td></tr>';
     return;
   }
 
@@ -1319,20 +1458,25 @@ function renderQuestionBankTable() {
     <tr>
       <td><code style="font-size: 0.78rem; color: var(--accent-cyan); font-weight: 600;">${escapeHtml(q.id)}</code></td>
       <td><span class="badge ${getModuleBadge(q.module)}">${escapeHtml(q.module)}</span></td>
-      <td><strong style="color: #ffffff; font-size: 0.88rem;">${escapeHtml(q.source)}</strong></td>
+      <td><strong style="color: #ffffff; font-size: 0.86rem;">${escapeHtml(q.source)}</strong></td>
       <td><span class="badge badge-purple" style="font-size: 0.72rem;">${escapeHtml(q.q_type)}</span></td>
-      <td style="max-width: 320px; font-size: 0.85rem; line-height: 1.4;">
-        ${escapeHtml(q.prompt.length > 95 ? q.prompt.substring(0, 95) + '...' : q.prompt)}
+      <td style="max-width: 300px; font-size: 0.84rem; line-height: 1.4;">
+        ${escapeHtml(q.prompt.length > 90 ? q.prompt.substring(0, 90) + '...' : q.prompt)}
+      </td>
+      <td>
+        <span style="color: #10b981; font-weight: 800; font-size: 0.88rem; background: rgba(16, 185, 129, 0.12); padding: 3px 8px; border-radius: 4px; display: inline-block;">
+          ${escapeHtml(q.answer)}
+        </span>
       </td>
       <td style="text-align: center;">
-        <button class="btn btn-outline btn-view-question" data-qid="${escapeHtml(q.id)}" style="padding: 4px 10px; font-size: 0.78rem; border-color: var(--accent-cyan); color: var(--accent-cyan);">
-          🔍 Soru & Cevap
+        <button class="btn btn-outline btn-view-question" data-qid="${escapeHtml(q.id)}" style="padding: 4px 8px; font-size: 0.76rem; border-color: var(--accent-cyan); color: var(--accent-cyan);">
+          🔍 İncele
         </button>
       </td>
     </tr>
   `).join('');
 
-  // Attach click events
+  // Attach click events for table view
   tbody.querySelectorAll('.btn-view-question').forEach(btn => {
     btn.addEventListener('click', () => {
       const qid = btn.getAttribute('data-qid');
@@ -1352,7 +1496,7 @@ function openQuestionDetailModal(qid) {
   const badgesBox = document.getElementById('qdetail-modal-badges');
   badgesBox.innerHTML = `
     <span class="badge ${getModuleBadge(q.module)}">${escapeHtml(q.module)}</span>
-    <span class="badge badge-cyan">${q.mode === 'academic' ? 'Cambridge Academic' : 'Adli Bilişim & Jean Monnet'}</span>
+    <span class="badge ${q.mode === 'academic' ? 'badge-amber' : 'badge-cyan'}">${q.mode === 'academic' ? 'Cambridge Academic' : 'Adli Bilişim & Jean Monnet'}</span>
     <span class="badge badge-purple">${escapeHtml(q.q_type)}</span>
   `;
 
@@ -1376,7 +1520,9 @@ function openQuestionDetailModal(qid) {
   }
 
   // Answer
-  document.getElementById('qdetail-modal-answer').textContent = q.answer || 'Model Değerlendirme / Serbest Yanıt';
+  document.getElementById('qdetail-modal-answer').innerHTML = `
+    <span>${escapeHtml(q.answer || 'Model Değerlendirme / Serbest Yanıt')}</span>
+  `;
 
   // Explanation & Tips
   let explanationHtml = escapeHtml(q.explanation || 'Bu soru için ek açıklama bulunmamaktadır.');
@@ -1392,24 +1538,84 @@ function openQuestionDetailModal(qid) {
   passageEl.style.display = 'none'; // closed by default
   if (togglePassageBtn) togglePassageBtn.textContent = 'Metni Göster';
 
+  // Companion Questions in this Exam
+  const compBox = document.getElementById('qdetail-modal-companion-box');
+  const compList = document.getElementById('qdetail-modal-companion-list');
+  const companions = bankQuestions.filter(item => item.source === q.source && item.id !== q.id);
+
+  if (companions.length > 0 && compBox && compList) {
+    compBox.style.display = 'block';
+    compList.innerHTML = companions.map(cq => `
+      <div style="background: rgba(15, 23, 42, 0.55); border: 1px solid var(--border-glass); padding: 8px 12px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+        <div style="font-size: 0.84rem; color: #ffffff; flex: 1;">
+          <code style="color: var(--accent-cyan); font-weight: 700;">[${escapeHtml(cq.id)}]</code> ${escapeHtml(cq.prompt)}
+        </div>
+        <div style="font-weight: 800; color: #10b981; font-size: 0.85rem; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); padding: 3px 10px; border-radius: 4px; white-space: nowrap;">
+          ✅ ${escapeHtml(cq.answer)}
+        </div>
+      </div>
+    `).join('');
+  } else if (compBox) {
+    compBox.style.display = 'none';
+  }
+
   modal.classList.add('active');
 }
 
 function initQuestionBankEvents() {
   const searchInput = document.getElementById('bank-search-input');
-  if (searchInput) searchInput.addEventListener('input', renderQuestionBankTable);
+  if (searchInput) searchInput.addEventListener('input', renderQuestionBank);
 
   const modFilter = document.getElementById('bank-filter-module');
-  if (modFilter) modFilter.addEventListener('change', renderQuestionBankTable);
+  if (modFilter) modFilter.addEventListener('change', renderQuestionBank);
 
   const modeFilter = document.getElementById('bank-filter-mode');
-  if (modeFilter) modeFilter.addEventListener('change', renderQuestionBankTable);
+  if (modeFilter) modeFilter.addEventListener('change', renderQuestionBank);
 
   const refreshBtn = document.getElementById('btn-refresh-bank');
   if (refreshBtn) refreshBtn.addEventListener('click', loadQuestionBank);
 
   const gotoBankBtn = document.getElementById('btn-goto-bank');
   if (gotoBankBtn) gotoBankBtn.addEventListener('click', () => switchModule('bank'));
+
+  // View Switcher Buttons
+  const btnGrouped = document.getElementById('btn-bank-view-grouped');
+  const btnTable = document.getElementById('btn-bank-view-table');
+  const grpContainer = document.getElementById('bank-grouped-container');
+  const tblContainer = document.getElementById('bank-table-container');
+
+  if (btnGrouped && btnTable && grpContainer && tblContainer) {
+    btnGrouped.addEventListener('click', () => {
+      bankViewMode = 'grouped';
+      btnGrouped.className = 'btn btn-ai-magic';
+      btnTable.className = 'btn btn-outline';
+      grpContainer.style.display = 'flex';
+      tblContainer.style.display = 'none';
+    });
+
+    btnTable.addEventListener('click', () => {
+      bankViewMode = 'table';
+      btnTable.className = 'btn btn-ai-magic';
+      btnGrouped.className = 'btn btn-outline';
+      tblContainer.style.display = 'block';
+      grpContainer.style.display = 'none';
+    });
+  }
+
+  // Toggle Passage Content inside modal
+  const togglePassageBtn = document.getElementById('btn-toggle-passage-content');
+  const passageEl = document.getElementById('qdetail-modal-passage');
+  if (togglePassageBtn && passageEl) {
+    togglePassageBtn.addEventListener('click', () => {
+      if (passageEl.style.display === 'none') {
+        passageEl.style.display = 'block';
+        togglePassageBtn.textContent = 'Metni Gizle';
+      } else {
+        passageEl.style.display = 'none';
+        togglePassageBtn.textContent = 'Metni Göster';
+      }
+    });
+  }
 
   // Close Detail Modal
   const closeBtn1 = document.getElementById('btn-close-qdetail');
@@ -1418,6 +1624,7 @@ function initQuestionBankEvents() {
   
   if (closeBtn1 && modal) closeBtn1.addEventListener('click', () => modal.classList.remove('active'));
   if (closeBtn2 && modal) closeBtn2.addEventListener('click', () => modal.classList.remove('active'));
+}
   if (modal) {
     modal.addEventListener('click', (e) => {
       if (e.target === modal) modal.classList.remove('active');
