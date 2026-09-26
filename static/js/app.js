@@ -1624,25 +1624,9 @@ function initQuestionBankEvents() {
   
   if (closeBtn1 && modal) closeBtn1.addEventListener('click', () => modal.classList.remove('active'));
   if (closeBtn2 && modal) closeBtn2.addEventListener('click', () => modal.classList.remove('active'));
-}
   if (modal) {
     modal.addEventListener('click', (e) => {
       if (e.target === modal) modal.classList.remove('active');
-    });
-  }
-
-  // Toggle Passage / Script
-  const togglePassageBtn = document.getElementById('btn-toggle-passage-content');
-  const passageEl = document.getElementById('qdetail-modal-passage');
-  if (togglePassageBtn && passageEl) {
-    togglePassageBtn.addEventListener('click', () => {
-      if (passageEl.style.display === 'none' || !passageEl.style.display) {
-        passageEl.style.display = 'block';
-        togglePassageBtn.textContent = 'Metni Gizle';
-      } else {
-        passageEl.style.display = 'none';
-        togglePassageBtn.textContent = 'Metni Göster';
-      }
     });
   }
 }
