@@ -179,9 +179,6 @@
         <div class="card-title">
           <div style="display: flex; align-items: center; gap: 10px;">
             <span>📖</span> Academic Reading Arena
-            <button id="btn-generate-ai-reading" class="btn btn-ai-magic" style="padding: 4px 12px; min-height: 32px; font-size: 0.8rem;">
-              ✨ Yapay Zeka ile Yeni Pasaj Üret
-            </button>
           </div>
           <div style="display: flex; align-items: center; gap: 8px;">
             <span id="timer-display-reading" style="font-family: var(--font-mono); font-weight: 700; color: var(--accent-cyan); font-size: 1.05rem;">60:00</span>
@@ -189,6 +186,19 @@
           </div>
         </div>
         <div class="card-desc">C1-C2 Akademik seviyede True/False/Not Given soruları. Yanlış yaptığınız sorular otomatik olarak "Yanlış Defterinize" kaydedilir.</div>
+
+        <!-- Reading Test Selector Bar -->
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 10px; margin-bottom: 14px; gap: 10px; flex-wrap: wrap; background: rgba(15, 23, 42, 0.4); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-glass);">
+          <div style="display: flex; align-items: center; gap: 8px; flex-grow: 1;">
+            <label for="reading-test-selector" style="font-size: 0.85rem; color: var(--accent-cyan); font-weight: 600; white-space: nowrap;">📚 Sınav Pasajı Seç:</label>
+            <select id="reading-test-selector" class="input-fill" style="padding: 6px 12px; font-size: 0.85rem; border-radius: 6px; flex-grow: 1; max-width: 420px;">
+              <!-- Populated by JS -->
+            </select>
+          </div>
+          <button id="btn-generate-ai-reading" class="btn btn-ai-magic" style="padding: 6px 14px; min-height: 32px; font-size: 0.82rem;">
+            ✨ Yapay Zeka ile Sınırsız Yeni Pasaj Üret
+          </button>
+        </div>
 
         <!-- Mobile View Switcher for Reading -->
         <div class="mobile-reading-toggle">
@@ -228,6 +238,16 @@
           <div class="badge badge-cyan">Gemini TTS Audio</div>
         </div>
         <div class="card-desc">Akademik ve adli bilişim diyaloglarını dinleyin; cevap kağıdını doldurarak puanınızı görün.</div>
+
+        <!-- Listening Test Selector Bar -->
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 10px; margin-bottom: 14px; gap: 10px; flex-wrap: wrap; background: rgba(15, 23, 42, 0.4); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-glass);">
+          <div style="display: flex; align-items: center; gap: 8px; flex-grow: 1;">
+            <label for="listening-test-selector" style="font-size: 0.85rem; color: var(--accent-cyan); font-weight: 600; white-space: nowrap;">🎧 Dinleme Bölümü Seç:</label>
+            <select id="listening-test-selector" class="input-fill" style="padding: 6px 12px; font-size: 0.85rem; border-radius: 6px; flex-grow: 1; max-width: 420px;">
+              <!-- Populated by JS -->
+            </select>
+          </div>
+        </div>
 
         <div class="audio-station">
           <div class="player-controls">

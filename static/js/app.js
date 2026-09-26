@@ -158,6 +158,8 @@ function initModeSwitcher() {
 async function switchMode(mode) {
   state.currentMode = mode;
   state.activeCustomPassage = null; // reset dynamic passage on mode switch
+  currentReadingPassage = 'passage_1';
+  currentListeningSection = 'section_1';
 
   document.getElementById('btn-mode-cyber').classList.toggle('active', mode === 'cyber');
   document.getElementById('btn-mode-academic').classList.toggle('active', mode === 'academic');
@@ -197,14 +199,14 @@ function initDynamicGenerators() {
         const data = await res.json();
         if (data.success) {
           state.activeCustomPassage = data.data;
-          renderCustomReadingPassage(data.data);
+          renderReadingModule();
           alert('✨ Yeni Cambridge IELTS Okuma Pasajı ve Soruları başarıyla üretildi!');
         }
       } catch (e) {
         alert('Üretim hatası: ' + e.message);
       } finally {
         btnGenReading.disabled = false;
-        btnGenReading.innerHTML = '✨ Yapay Zeka ile Yeni Pasaj Üret';
+        btnGenReading.innerHTML = '✨ Yapay Zeka ile Sınırsız Yeni Pasaj Üret';
       }
     });
   }
@@ -242,23 +244,65 @@ function initDynamicGenerators() {
 }
 
 /* ================= Reading Module ================= */
+let currentReadingPassage = 'passage_1';
+
 function renderReadingModule() {
+  const readingData = state.examData ? state.examData.reading : null;
+  if (!readingData && !state.activeCustomPassage) return;
+
+  // Populate Reading Selector Dropdown
+  const selector = document.getElementById('reading-test-selector');
+  if (selector && readingData) {
+    selector.innerHTML = '';
+    Object.keys(readingData).forEach(key => {
+      const opt = document.createElement('option');
+      opt.value = key;
+      opt.textContent = readingData[key].title;
+      if (!state.activeCustomPassage && key === currentReadingPassage) {
+        opt.selected = true;
+      }
+      selector.appendChild(opt);
+    });
+
+    if (state.activeCustomPassage) {
+      const opt = document.createElement('option');
+      opt.value = 'custom_ai';
+      opt.textContent = `✨ [AI Üretimi] ${state.activeCustomPassage.title}`;
+      opt.selected = true;
+      selector.appendChild(opt);
+    }
+
+    selector.onchange = (e) => {
+      const val = e.target.value;
+      if (val === 'custom_ai') {
+        if (state.activeCustomPassage) {
+          renderCustomReadingPassage(state.activeCustomPassage);
+        }
+      } else {
+        state.activeCustomPassage = null;
+        currentReadingPassage = val;
+        renderStaticReadingPassage(readingData[val]);
+      }
+    };
+  }
+
   if (state.activeCustomPassage) {
     renderCustomReadingPassage(state.activeCustomPassage);
-    return;
+  } else if (readingData) {
+    const passage = readingData[currentReadingPassage] || readingData['passage_1'];
+    renderStaticReadingPassage(passage);
   }
-  const readingData = state.examData.reading;
-  if (!readingData) return;
+}
 
-  const passage = readingData.passage_1;
+function renderStaticReadingPassage(passage) {
+  if (!passage) return;
   document.getElementById('reading-passage-title').textContent = passage.title;
   document.getElementById('reading-passage-text').innerHTML = passage.text.split('\n\n').map(p => `<p>${p}</p>`).join('');
-
   renderReadingQuestions(passage.questions);
 }
 
 function renderCustomReadingPassage(passage) {
-  document.getElementById('reading-passage-title').innerHTML = `✨ [AI Generated] ${passage.title}`;
+  document.getElementById('reading-passage-title').innerHTML = `✨ [AI Canlı Sınav] ${passage.title}`;
   document.getElementById('reading-passage-text').innerHTML = passage.text.split('\n\n').map(p => `<p>${p}</p>`).join('');
   renderReadingQuestions(passage.questions);
 }
@@ -291,9 +335,11 @@ function renderReadingQuestions(questions) {
 const submitReadingBtn = document.getElementById('btn-submit-reading');
 if (submitReadingBtn) {
   submitReadingBtn.addEventListener('click', async () => {
-    const passage = state.activeCustomPassage || state.examData.reading.passage_1;
-    const answers = {};
+    const readingData = state.examData ? state.examData.reading : null;
+    const passage = state.activeCustomPassage || (readingData ? (readingData[currentReadingPassage] || readingData.passage_1) : null);
+    if (!passage) return;
 
+    const answers = {};
     passage.questions.forEach(q => {
       const checked = document.querySelector(`input[name="rq-${q.id}"]:checked`);
       answers[q.id] = checked ? checked.value : '';
@@ -308,7 +354,7 @@ if (submitReadingBtn) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           mode: state.currentMode,
-          passage_id: 'passage_1',
+          passage_id: currentReadingPassage,
           answers: answers,
           user_email: state.currentUser.email,
           custom_passage: state.activeCustomPassage
@@ -323,7 +369,7 @@ if (submitReadingBtn) {
       alert('Grading error: ' + e.message);
     } finally {
       submitReadingBtn.disabled = false;
-      submitReadingBtn.innerHTML = '📝 Submit & Grade Reading';
+      submitReadingBtn.innerHTML = '📝 Testi Puanla & Yanlışlarımı Kaydet';
     }
   });
 }
@@ -332,11 +378,35 @@ if (submitReadingBtn) {
 let currentListeningSection = 'section_1';
 
 function renderListeningModule() {
-  const listeningData = state.examData.listening;
+  const listeningData = state.examData ? state.examData.listening : null;
   if (!listeningData) return;
 
+  // Populate Listening Selector Dropdown
+  const selector = document.getElementById('listening-test-selector');
+  if (selector) {
+    selector.innerHTML = '';
+    Object.keys(listeningData).forEach(key => {
+      const opt = document.createElement('option');
+      opt.value = key;
+      opt.textContent = listeningData[key].title;
+      if (key === currentListeningSection) {
+        opt.selected = true;
+      }
+      selector.appendChild(opt);
+    });
+
+    selector.onchange = (e) => {
+      currentListeningSection = e.target.value;
+      renderListeningContent(listeningData[currentListeningSection]);
+    };
+  }
+
   const section = listeningData[currentListeningSection] || listeningData['section_1'];
-  
+  renderListeningContent(section);
+}
+
+function renderListeningContent(section) {
+  if (!section) return;
   document.getElementById('listening-section-title').textContent = section.title;
   document.getElementById('listening-section-intro').textContent = section.intro;
 

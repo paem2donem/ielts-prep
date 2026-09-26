@@ -150,6 +150,50 @@ To mitigate such evidentiary challenges, forensic practitioners must demonstrate
                         "explanation": "Metinde 'inevitably introducing minuscule modifications to the target host' ifadesi açıkça yer almaktadır."
                     }
                 ]
+            },
+            "passage_2": {
+                "title": "Passage 2: Volatile Memory Forensics & RAM Triage in Europol Investigations",
+                "text": """
+In complex transnational cybercrime investigations coordinated by the European Cybercrime Centre (EC3), perpetrators increasingly operate without leaving persistent forensic footprints on non-volatile disks. State-sponsored Advanced Persistent Threat (APT) groups and sophisticated ransomware cartels leverage code injection into legitimate operating system processes—such as svchost.exe or lsass.exe—and establish ephemeral command-and-control communication channels via encrypted Transport Layer Security (TLS) sockets. Under these circumstances, forensic examination of physical hard drives yields virtually negligible evidentiary value.
+
+Consequently, volatile memory (RAM) analysis has become the linchpin of modern cyber incident response. Physical memory serves as the real-time execution canvas of the entire operating system, harboring unencrypted cryptographic keys, process execution trees, injected dynamic link libraries (DLLs), and active network sockets. To capture this ephemeral artifact, Europol incident responders deploy kernel-level acquisition utilities such as LiME (Linux Memory Extractor) or WinPmem. Because any software executed on a live suspect host necessarily alters unallocated RAM pages, investigators must meticulously calculate and document the forensic footprint of the acquisition binary itself.
+
+Once a raw memory image is secured, analysts employ open-source forensic frameworks such as Volatility or Rekall to reconstruct the system's operational state at the microsecond of capture. By parsing kernel data structures—including the ActiveProcessLinks doubly-linked list in Windows or the task_struct in Linux—analysts can expose rootkits that utilize Direct Kernel Object Manipulation (DKOM) to hide malicious processes from standard administrative monitoring tools. While memory analysis requires specialized technical acumen and carries risks of data volatilization, it provides unparalleled, unalterable proof of malicious execution within modern legal frameworks.
+""",
+                "questions": [
+                    {
+                        "id": "cr2_q1",
+                        "prompt": "1. APT groups frequently inject malicious code into legitimate system processes to avoid disk artifacts.",
+                        "type": "tfng",
+                        "options": ["TRUE", "FALSE", "NOT GIVEN"],
+                        "answer": "TRUE",
+                        "explanation": "Metinde APT gruplarının meşru süreçlere kod enjekte ederek diskte kalıcı iz bırakmadığı belirtilmiştir."
+                    },
+                    {
+                        "id": "cr2_q2",
+                        "prompt": "2. Operating system RAM retains unencrypted cryptographic keys and active network connections.",
+                        "type": "tfng",
+                        "options": ["TRUE", "FALSE", "NOT GIVEN"],
+                        "answer": "TRUE",
+                        "explanation": "Metinde RAM'in şifrelenmemiş kriptografik anahtarları ve aktif ağ soketlerini barındırdığı doğrulanmıştır."
+                    },
+                    {
+                        "id": "cr2_q3",
+                        "prompt": "3. Live memory acquisition with tools like LiME causes zero modification to the host's physical RAM.",
+                        "type": "tfng",
+                        "options": ["TRUE", "FALSE", "NOT GIVEN"],
+                        "answer": "FALSE",
+                        "explanation": "Metinde canlı sistem üzerinde çalışan yazılımların ayrılmamış RAM sayfalarında mutlaka değişiklik yapacağı ('necessarily alters unallocated RAM pages') ifade edilmiştir."
+                    },
+                    {
+                        "id": "cr2_q4",
+                        "prompt": "4. Volatility framework can only be utilized by accredited government intelligence agencies.",
+                        "type": "tfng",
+                        "options": ["TRUE", "FALSE", "NOT GIVEN"],
+                        "answer": "NOT GIVEN",
+                        "explanation": "Metinde Volatility'nin açık kaynaklı bir araç olduğu söylenmiş, kimlerin kullanabileceğine dair bir kısıtlama verilmemiştir."
+                    }
+                ]
             }
         },
         "writing": {
@@ -210,11 +254,112 @@ And explain what crucial lesson you derived from this experience for modern fore
     },
     "academic": {
         "title": "Genel Cambridge IELTS Academic Modu",
-        "description": "Standart Cambridge IELTS sınav formatında çevre, bilim, eğitim ve toplum temalı sınav seti.",
+        "description": "Orijinal Cambridge IELTS 18, 17 ve standart Academic formatında çevre, bilim, kentsel gelişim ve toplum temalı sınav setleri.",
         "listening": {
             "section_1": {
+                "id": "cambridge18_l1",
+                "title": "Cambridge 18 - Section 1: South Lake District Transport Survey",
+                "intro": "You will hear a transport surveyor interviewing a resident in the South Lake District about local bus and train services.",
+                "audio_script": """
+Surveyor: Good morning! Excuse me, could you spare a few moments to assist with our public transport survey for the South Lake District Council?
+Resident: Yes, certainly. I have a few minutes before my train arrives.
+Surveyor: Splendid. First, could I take your full name, please?
+Resident: It's Louisa Jenkins.
+Surveyor: And what is your current residential postcode?
+Resident: It is LA23 1BW.
+Surveyor: LA23 1BW. Thank you. Now, what is the primary purpose of your journey today? Are you commuting to work or travelling for leisure?
+Resident: Neither, actually. I am travelling to visit a dental clinic in Windermere.
+Surveyor: Ah, medical appointment. And how frequently do you use the regional bus services?
+Resident: I used to catch the bus every day, but since the service timetable changed, I take it roughly twice a week.
+Surveyor: Twice a week. And which specific bus route do you use most often?
+Resident: The number 555 Lakes Connection.
+Surveyor: And regarding payment, do you purchase a single cash ticket or do you hold an electronic pass?
+Resident: I use a monthly smart card called the EcoTravel Pass. It saves me about twenty percent.
+""",
+                "questions": [
+                    {
+                        "id": "c18l_q1",
+                        "type": "fill",
+                        "prompt": "1. Residential Postcode: LA23 ____________",
+                        "answer": "1BW",
+                        "accepted": ["1bw", "1BW", "1 B W", "1 b w"]
+                    },
+                    {
+                        "id": "c18l_q2",
+                        "type": "fill",
+                        "prompt": "2. Primary journey purpose: ____________ appointment",
+                        "answer": "dental",
+                        "accepted": ["dental", "medical", "dental clinic"]
+                    },
+                    {
+                        "id": "c18l_q3",
+                        "type": "fill",
+                        "prompt": "3. Frequency of bus travel: ____________ a week",
+                        "answer": "twice",
+                        "accepted": ["twice", "2 times", "2", "two times"]
+                    },
+                    {
+                        "id": "c18l_q4",
+                        "type": "fill",
+                        "prompt": "4. Discount pass brand: ____________ Pass",
+                        "answer": "EcoTravel",
+                        "accepted": ["ecotravel", "EcoTravel", "Eco Travel", "ecotravel pass"]
+                    }
+                ]
+            },
+            "section_2": {
+                "id": "cambridge17_l1",
+                "title": "Cambridge 17 - Section 1: Community Centre Hall Hire",
+                "intro": "You will hear an officer at a local community arts centre discussing facility booking with an event organizer.",
+                "audio_script": """
+Officer: Good afternoon, Brampton Community Centre. How may I help you?
+Organizer: Hello. I'm organizing an exhibition for our local amateur photography club and would like to hire one of your function rooms next month.
+Officer: Certainly. What is the official name of your society or club?
+Organizer: We are registered as the Focus Photographic Society.
+Officer: Excellent. And what date are you looking to hold the exhibition?
+Organizer: We are aiming for Saturday, the 24th of September.
+Officer: Let me check the schedule... Yes, the Main Auditorium is occupied, but the Garden Room is completely vacant.
+Organizer: How many people can the Garden Room accommodate comfortably?
+Officer: It has a maximum seated capacity of 85 people, or up to 110 for standing receptions.
+Organizer: 85 seated is more than enough for our members. What is the hourly rental charge?
+Officer: For community non-profit groups, the rate is 42 pounds per hour.
+Organizer: And does that include audiovisual equipment like a digital projector?
+Officer: Yes, a ceiling projector and high-resolution screen are included at no extra charge.
+""",
+                "questions": [
+                    {
+                        "id": "c17l_q1",
+                        "type": "fill",
+                        "prompt": "1. Society Name: Focus ____________ Society",
+                        "answer": "Photographic",
+                        "accepted": ["photographic", "Photographic", "photography"]
+                    },
+                    {
+                        "id": "c17l_q2",
+                        "type": "fill",
+                        "prompt": "2. Requested date: 24th of ____________",
+                        "answer": "September",
+                        "accepted": ["september", "September", "Sept", "sept"]
+                    },
+                    {
+                        "id": "c17l_q3",
+                        "type": "fill",
+                        "prompt": "3. Allocated venue: The ____________ Room",
+                        "answer": "Garden",
+                        "accepted": ["garden", "Garden"]
+                    },
+                    {
+                        "id": "c17l_q4",
+                        "type": "fill",
+                        "prompt": "4. Hourly hire fee: £____________",
+                        "answer": "42",
+                        "accepted": ["42", "42 pounds", "£42"]
+                    }
+                ]
+            },
+            "section_3": {
                 "id": "acad_l1",
-                "title": "Section 1: University Accommodation Registration",
+                "title": "Cambridge Academic - Section 1: University Accommodation Registration",
                 "intro": "You will hear a prospective international student inquiring about postgraduate campus accommodation.",
                 "audio_script": """
 Clerk: Good afternoon, University Student Housing Office. How can I help you today?
@@ -263,7 +408,95 @@ Clerk: You will need to pay a refundable deposit of 300 pounds by the 15th of Au
         },
         "reading": {
             "passage_1": {
-                "title": "Passage 1: The Transition to Grid-Scale Renewable Energy Storage",
+                "title": "Passage 1: Cambridge 18 — Urban Farming: The Rise of Vertical Agriculture",
+                "text": """
+In the face of unprecedented demographic expansion and accelerating climatic disruptions, traditional agriculture is encountering severe structural limitations. By 2050, the global human population is projected to exceed 9.7 billion, necessitating an estimated sixty percent increase in food production. However, arable land is diminishing rapidly due to urbanization, topsoil degradation, and industrial contamination. To circumvent these ecological constraints, agricultural scientists and urban planners are pioneering vertical farming: the practice of cultivating crops in vertically stacked layers inside controlled environment agriculture (CEA) facilities.
+
+Vertical farms typically utilize soilless growing techniques such as hydroponics—where plant roots are submerged in nutrient-enriched liquid solutions—and aeroponics, in which roots are periodically misted with precise mineral suspensions. Because these facilities operate within fully sealed, climate-regulated urban structures, they decouple crop yields from external seasonal variations and adverse meteorological events like droughts or floods. Furthermore, closed-loop irrigation systems recirculate water, reducing agricultural water consumption by up to ninety-five percent compared to conventional open-field cultivation.
+
+Despite these compelling advantages, commercial vertical farming confronts formidable economic and energetic hurdles. The capital expenditure required to construct state-of-the-art multi-storey facilities and equip them with automated robotics and artificial LED lighting arrays is exceptionally high. Moreover, replacing natural sunlight with specialized high-intensity spectrum lights incurs staggering electrical costs. Critics point out that until urban power grids transition comprehensively to low-carbon renewable generation, the operational carbon footprint of vertical farms may inadvertently exceed that of rural transport-based produce. Consequently, the commercial viability of vertical agriculture currently remains restricted to high-margin, fast-growing greens such as microgreens, leafy herbs, and strawberries, while staple carbohydrate crops like wheat and maize remain unfeasible.
+""",
+                "questions": [
+                    {
+                        "id": "c18r_q1",
+                        "prompt": "1. Vertical farming requires significantly less water than traditional open-field farming methods.",
+                        "type": "tfng",
+                        "options": ["TRUE", "FALSE", "NOT GIVEN"],
+                        "answer": "TRUE",
+                        "explanation": "Metinde geleneksel tarıma kıyasla %95'e varan su tasarrufu sağladığı ('reducing agricultural water consumption by up to ninety-five percent compared to conventional open-field cultivation') açıkça doğrulanmıştır."
+                    },
+                    {
+                        "id": "c18r_q2",
+                        "prompt": "2. High-intensity LED illumination makes vertical farming carbon-neutral regardless of how electricity is produced.",
+                        "type": "tfng",
+                        "options": ["TRUE", "FALSE", "NOT GIVEN"],
+                        "answer": "FALSE",
+                        "explanation": "Metinde elektrik şebekesi yenilenebilir enerjiye geçmedikçe dikey tarımın karbon ayak izinin geleneksel tarımı bile aşabileceği ('carbon footprint may inadvertently exceed that of rural transport-based produce') belirtilmiştir."
+                    },
+                    {
+                        "id": "c18r_q3",
+                        "prompt": "3. Vertical farms currently produce the majority of wheat consumed in major European metropolises.",
+                        "type": "tfng",
+                        "options": ["TRUE", "FALSE", "NOT GIVEN"],
+                        "answer": "FALSE",
+                        "explanation": "Metnin sonunda buğday ve mısır gibi temel tahılların dikey tarımda üretilmesinin henüz uygulanamaz olduğu ('staple carbohydrate crops like wheat and maize remain unfeasible') ifade edilmiştir."
+                    },
+                    {
+                        "id": "c18r_q4",
+                        "prompt": "4. Government subsidies for urban vertical farms were increased following international climate agreements.",
+                        "type": "tfng",
+                        "options": ["TRUE", "FALSE", "NOT GIVEN"],
+                        "answer": "NOT GIVEN",
+                        "explanation": "Metinde devlet teşvikleri veya sübvansiyonlar hakkında hiçbir bilgi verilmemiştir."
+                    }
+                ]
+            },
+            "passage_2": {
+                "title": "Passage 2: Cambridge 17 — The Development of the London Underground Railway",
+                "text": """
+In the first half of the nineteenth century, London experienced exponential commercial expansion, rapidly becoming the financial and administrative capital of the British Empire. However, this demographic influx created crippling logistical paralysis on the city's surface streets. Tens of thousands of horse-drawn omnibuses, cabs, and heavy delivery wagons choked the narrow thoroughfares, resulting in monumental gridlocks. Furthermore, while long-distance steam railways connected provincial towns to London, parliamentary legislation prohibited steam locomotives from penetrating the urban core to preserve historic architecture and protect residents from noxious smoke. Consequently, mainline train stations were stranded on the periphery of the central district, forcing hundreds of thousands of daily commuters to complete their journeys across the city on foot or by horse-drawn carriage.
+
+The visionary solicitor Charles Pearson recognized that the only viable solution was to transport passengers beneath the congested streets. In the 1850s, Pearson tirelessly campaigned for an underground railway connecting Paddington Station to Farringdon Street in the City of London. Despite widespread ridicule from the popular press and scepticism from investors who predicted that tunnels would inevitably collapse beneath the weight of London traffic, construction of the Metropolitan Railway commenced in 1860.
+
+The line was constructed using the rudimentary 'cut-and-cover' engineering technique: an expansive trench was excavated along existing public streets, brick retaining walls and arched roofs were erected, and the roadway was subsequently rebuilt overhead. Opened to the public on January 10, 1863, the Metropolitan Railway was an instantaneous triumph, transporting over thirty-eight thousand passengers on its opening day alone. Despite initial complaints regarding sulfurous fumes discharged by steam engines in the subterranean tunnels, the railway proved that underground transit was an indispensable asset for metropolitan mobility.
+""",
+                "questions": [
+                    {
+                        "id": "c17r_q1",
+                        "prompt": "1. In early Victorian London, steam locomotives were legally banned from entering the historic centre of the city.",
+                        "type": "tfng",
+                        "options": ["TRUE", "FALSE", "NOT GIVEN"],
+                        "answer": "TRUE",
+                        "explanation": "Metinde 'parliamentary legislation prohibited steam locomotives from penetrating the urban core' ifadesi bu yasağı doğrudan doğrular."
+                    },
+                    {
+                        "id": "c17r_q2",
+                        "prompt": "2. Charles Pearson faced immediate financial support and acclaim when he first proposed the underground railway.",
+                        "type": "tfng",
+                        "options": ["TRUE", "FALSE", "NOT GIVEN"],
+                        "answer": "FALSE",
+                        "explanation": "Metinde önerinin ilk başta basında alay konusu olduğu ve yatırımcıların şüpheyle yaklaştığı ('widespread ridicule and scepticism') belirtilmiştir."
+                    },
+                    {
+                        "id": "c17r_q3",
+                        "prompt": "3. The 'cut-and-cover' method allowed underground tunnels to be constructed without disturbing the street surface above.",
+                        "type": "tfng",
+                        "options": ["TRUE", "FALSE", "NOT GIVEN"],
+                        "answer": "FALSE",
+                        "explanation": "Metinde mevcut sokakların boyunca hendekler kazılarak caddelerin bozulduğu ve sonradan üzerlerinin yeniden inşa edildiği ('expansive trench was excavated along existing public streets') belirtilmiştir."
+                    },
+                    {
+                        "id": "c17r_q4",
+                        "prompt": "4. Subsequent ventilation shafts successfully eliminated all sulfurous odors from the tunnels within six months.",
+                        "type": "tfng",
+                        "options": ["TRUE", "FALSE", "NOT GIVEN"],
+                        "answer": "NOT GIVEN",
+                        "explanation": "Metinde havalandırma bacalarının altı ay içinde tüm dumanı yok ettiğine dair hiçbir bilgi yer almamaktadır."
+                    }
+                ]
+            },
+            "passage_3": {
+                "title": "Passage 3: The Transition to Grid-Scale Renewable Energy Storage",
                 "text": """
 The transition from fossil-fuel-dominated power generation to decentralized renewable energy sources—principally solar photovoltaic and wind turbine arrays—represents one of the grandest engineering challenges of the twenty-first century. While the capital expenditure for solar modules and wind generators has plummeted by more than eighty percent over the past decade, renewable power faces an intrinsic vulnerability: intermittency. Solar generation drops precipitously during nocturnal hours and overcast weather, whereas wind power yields fluctuate unpredictably with atmospheric pressure gradients.
 
