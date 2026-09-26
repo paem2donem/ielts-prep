@@ -16,10 +16,18 @@ from tricks_data import IELTS_TRICKS
 from services import ai_service
 
 app = FastAPI(
-    title="ForenSync Academy - IELTS & Cyber Prep Suite",
-    description="Intelligent IELTS & Cyber Forensics Training Suite with Dynamic AI Exam Generation & Personal Guidance",
+    title="IELTS - Band 7.5+ Master Prep Suite",
+    description="Intelligent Cambridge IELTS & Cyber Forensics Training Suite with Dynamic AI Exam Generation & Personal Guidance",
     version="3.0.0"
 )
+
+# Startup sync for database question bank
+@app.on_event("startup")
+async def startup_event():
+    try:
+        database.sync_all_exam_questions(EXAM_DATA)
+    except Exception as e:
+        print(f"Initial questions sync notice: {e}")
 
 # Enable CORS for mobile browsers and remote hosts
 app.add_middleware(
@@ -53,24 +61,24 @@ class WritingRequest(BaseModel):
     task_type: str = "Task 2"
     mode: str = "cyber"
     prompt_context: str = ""
-    user_email: str = "guest@forensync.academy"
+    user_email: str = "paem2.donem@gmail.com"
 
 class ReadingSubmission(BaseModel):
     mode: str = "cyber"
     passage_id: str = "passage_1"
     answers: Dict[str, str]
-    user_email: str = "guest@forensync.academy"
+    user_email: str = "paem2.donem@gmail.com"
     custom_passage: Optional[Dict[str, Any]] = None
 
 class ListeningSubmission(BaseModel):
     mode: str = "cyber"
     section_id: str = "section_1"
     answers: Dict[str, str]
-    user_email: str = "guest@forensync.academy"
+    user_email: str = "paem2.donem@gmail.com"
 
 class MentorRequest(BaseModel):
     mode: str = "cyber"
-    user_email: str = "guest@forensync.academy"
+    user_email: str = "paem2.donem@gmail.com"
 
 class GenerateExamRequest(BaseModel):
     module: str = "reading" # "reading" or "writing"
@@ -96,13 +104,19 @@ async def login_user(req: LoginRequest):
     return {"success": True, "user": user, "stats": stats}
 
 @app.get("/api/user/analytics")
-async def user_analytics(email: str = "guest@forensync.academy"):
+async def user_analytics(email: str = "paem2.donem@gmail.com"):
     return database.get_user_analytics(email)
 
 @app.get("/api/user/mistakes")
-async def user_mistakes(email: str = "guest@forensync.academy"):
+async def user_mistakes(email: str = "paem2.donem@gmail.com"):
     mistakes = database.get_user_mistakes(email)
     return {"mistakes": mistakes}
+
+# All Questions Table for Candidate's Account & Bank
+@app.get("/api/questions")
+async def get_questions_endpoint(module: Optional[str] = None, mode: Optional[str] = None, search: Optional[str] = None):
+    items = database.get_all_questions_list(module=module, mode=mode, search=search)
+    return {"total": len(items), "questions": items}
 
 # Tricks and Masterclass Library
 @app.get("/api/tricks")
@@ -123,6 +137,36 @@ async def generate_exam(req: GenerateExamRequest):
                 title=new_test["title"],
                 payload=new_test
             )
+            # Soru bankasına da kaydet
+            try:
+                import sqlite3, json, datetime
+                conn = sqlite3.connect(database.DB_FILE)
+                c = conn.cursor()
+                now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                for q in new_test.get("questions", []):
+                    c.execute('''
+                        INSERT OR REPLACE INTO questions 
+                        (id, mode, module, source, passage_or_script, prompt, q_type, options_json, answer, accepted_json, explanation, trick_tip, created_at)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ''', (
+                        f"{q_id}_{q.get('id', 'q')}",
+                        req.mode,
+                        "Reading",
+                        f"AI Sınavı - {new_test.get('title', 'Okuma')}",
+                        new_test.get("text", ""),
+                        q.get("prompt", ""),
+                        "TFNG",
+                        json.dumps(q.get("options", ["TRUE", "FALSE", "NOT GIVEN"])),
+                        q.get("answer", ""),
+                        json.dumps([q.get("answer", "")]),
+                        q.get("explanation", ""),
+                        q.get("trick_tip", ""),
+                        now_str
+                    ))
+                conn.commit()
+                conn.close()
+            except Exception:
+                pass
             return {"success": True, "test_id": q_id, "data": new_test}
         elif req.module == "writing":
             new_prompt = ai_service.generate_dynamic_writing_prompt(task_type=req.task_type or "Task 2", mode=req.mode)
@@ -134,6 +178,35 @@ async def generate_exam(req: GenerateExamRequest):
                 title=new_prompt["title"],
                 payload=new_prompt
             )
+            # Soru bankasına kaydet
+            try:
+                import sqlite3, json, datetime
+                conn = sqlite3.connect(database.DB_FILE)
+                c = conn.cursor()
+                now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                c.execute('''
+                    INSERT OR REPLACE INTO questions 
+                    (id, mode, module, source, passage_or_script, prompt, q_type, options_json, answer, accepted_json, explanation, trick_tip, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (
+                    q_id,
+                    req.mode,
+                    "Writing",
+                    f"AI Görevi - {new_prompt.get('title', req.task_type)}",
+                    f"Min kelime: {new_prompt.get('min_words', 250)} | Anahtar kelimeler: {', '.join(new_prompt.get('key_vocabulary_tips', []))}",
+                    new_prompt.get("prompt", ""),
+                    req.task_type or "Task 2",
+                    json.dumps([]),
+                    "Model Band 8.5 Response",
+                    json.dumps([]),
+                    "Yapay zeka tarafından üretilen özgün kompozisyon konusu.",
+                    "Zaman yönetimi: Task 2 için 40 dakika ayırın, en az 250 kelime yazın.",
+                    now_str
+                ))
+                conn.commit()
+                conn.close()
+            except Exception:
+                pass
             return {"success": True, "test_id": q_id, "data": new_prompt}
         else:
             raise HTTPException(status_code=400, detail="Module not supported for generation")

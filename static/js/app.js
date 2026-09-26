@@ -1,7 +1,7 @@
 /* ===================================================================
-   ForenSync Academy: IELTS & Cyber Prep - Frontend Engine (v3.0)
+   IELTS: Band 7.5+ Master Prep Suite - Frontend Engine (v3.0)
    Full Interactive Modules: Dynamic AI Generator, User Profiles, 
-   Error Notebook, Cambridge Tricks, Timers & Analytics
+   Question Bank, Error Notebook, Cambridge Tricks, Timers & Analytics
    =================================================================== */
 
 // Global State
@@ -14,6 +14,7 @@ const state = {
   currentModule: 'writing',
   examData: null,
   activeCustomPassage: null,
+  allQuestions: [],
 
   // Timers
   timers: {
@@ -42,6 +43,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   initWritingModule();
   initSpeakingRecorder();
   initDynamicGenerators();
+  initQuestionBankEvents();
   
   // Initial load
   await switchMode('cyber');
@@ -144,6 +146,7 @@ function switchModule(moduleName) {
   if (moduleName === 'mentor') loadAnalytics();
   if (moduleName === 'mistakes') loadMistakes();
   if (moduleName === 'tricks') loadTricks();
+  if (moduleName === 'bank') loadQuestionBank();
 }
 
 /* ================= Mode Switcher ================= */
@@ -1047,4 +1050,195 @@ function formatMarkdown(md) {
     .replace(/^- (.*$)/gim, '<li>$1</li>')
     .replace(/^\d+\. (.*$)/gim, '<li>$1</li>')
     .replace(/\n\n/gim, '<br><br>');
+}
+
+/* ================= Question Bank Module ================= */
+let bankQuestions = [];
+
+async function loadQuestionBank() {
+  const tbody = document.getElementById('bank-table-body');
+  if (tbody) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 25px;"><span class="spinner"></span> Veritabanındaki sorular yükleniyor...</td></tr>';
+  }
+
+  try {
+    const res = await fetch('/api/questions');
+    const data = await res.json();
+    bankQuestions = data.questions || [];
+
+    const badge = document.getElementById('bank-total-count-badge');
+    if (badge) badge.textContent = `${data.total || bankQuestions.length} Soru Kayıtlı`;
+
+    renderQuestionBankTable();
+  } catch (err) {
+    if (tbody) {
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--accent-rose); padding: 20px;">Hata: ${err.message}</td></tr>`;
+    }
+  }
+}
+
+function renderQuestionBankTable() {
+  const tbody = document.getElementById('bank-table-body');
+  if (!tbody) return;
+
+  const searchInput = (document.getElementById('bank-search-input')?.value || '').toLowerCase().trim();
+  const moduleFilter = document.getElementById('bank-filter-module')?.value || 'all';
+  const modeFilter = document.getElementById('bank-filter-mode')?.value || 'all';
+
+  const filtered = bankQuestions.filter(q => {
+    if (moduleFilter !== 'all' && q.module !== moduleFilter) return false;
+    if (modeFilter !== 'all' && q.mode !== modeFilter) return false;
+    if (searchInput) {
+      const haystack = `${q.id} ${q.source} ${q.prompt} ${q.answer} ${q.q_type}`.toLowerCase();
+      if (!haystack.includes(searchInput)) return false;
+    }
+    return true;
+  });
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 25px; color: var(--text-dim);">Filtreye uygun soru bulunamadı.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(q => `
+    <tr>
+      <td><code style="font-size: 0.78rem; color: var(--accent-cyan); font-weight: 600;">${escapeHtml(q.id)}</code></td>
+      <td><span class="badge ${getModuleBadge(q.module)}">${escapeHtml(q.module)}</span></td>
+      <td><strong style="color: #ffffff; font-size: 0.88rem;">${escapeHtml(q.source)}</strong></td>
+      <td><span class="badge badge-purple" style="font-size: 0.72rem;">${escapeHtml(q.q_type)}</span></td>
+      <td style="max-width: 320px; font-size: 0.85rem; line-height: 1.4;">
+        ${escapeHtml(q.prompt.length > 95 ? q.prompt.substring(0, 95) + '...' : q.prompt)}
+      </td>
+      <td style="text-align: center;">
+        <button class="btn btn-outline btn-view-question" data-qid="${escapeHtml(q.id)}" style="padding: 4px 10px; font-size: 0.78rem; border-color: var(--accent-cyan); color: var(--accent-cyan);">
+          🔍 Soru & Cevap
+        </button>
+      </td>
+    </tr>
+  `).join('');
+
+  // Attach click events
+  tbody.querySelectorAll('.btn-view-question').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const qid = btn.getAttribute('data-qid');
+      openQuestionDetailModal(qid);
+    });
+  });
+}
+
+function openQuestionDetailModal(qid) {
+  const q = bankQuestions.find(item => item.id === qid);
+  if (!q) return;
+
+  const modal = document.getElementById('modal-question-detail');
+  if (!modal) return;
+
+  // Badges
+  const badgesBox = document.getElementById('qdetail-modal-badges');
+  badgesBox.innerHTML = `
+    <span class="badge ${getModuleBadge(q.module)}">${escapeHtml(q.module)}</span>
+    <span class="badge badge-cyan">${q.mode === 'academic' ? 'Cambridge Academic' : 'Adli Bilişim & Jean Monnet'}</span>
+    <span class="badge badge-purple">${escapeHtml(q.q_type)}</span>
+  `;
+
+  // Source & Prompt
+  document.getElementById('qdetail-modal-source').textContent = q.source;
+  document.getElementById('qdetail-modal-prompt').textContent = q.prompt;
+
+  // Options
+  const optBox = document.getElementById('qdetail-modal-options-box');
+  const optContainer = document.getElementById('qdetail-modal-options');
+  if (q.options && Array.isArray(q.options) && q.options.length > 0) {
+    optBox.style.display = 'block';
+    optContainer.innerHTML = q.options.map(opt => `
+      <span class="badge" style="background: rgba(30, 41, 59, 0.8); border: 1px solid var(--border-glass); color: #e2e8f0; font-size: 0.8rem; padding: 4px 10px;">
+        ${escapeHtml(opt)}
+      </span>
+    `).join('');
+  } else {
+    optBox.style.display = 'none';
+    optContainer.innerHTML = '';
+  }
+
+  // Answer
+  document.getElementById('qdetail-modal-answer').textContent = q.answer || 'Model Değerlendirme / Serbest Yanıt';
+
+  // Explanation & Tips
+  let explanationHtml = escapeHtml(q.explanation || 'Bu soru için ek açıklama bulunmamaktadır.');
+  if (q.trick_tip) {
+    explanationHtml += `<br><br><strong style="color: var(--accent-amber);">💡 Cambridge Sınav Taktiği:</strong> ${escapeHtml(q.trick_tip)}`;
+  }
+  document.getElementById('qdetail-modal-explanation').innerHTML = explanationHtml;
+
+  // Passage / Audio Script
+  const passageEl = document.getElementById('qdetail-modal-passage');
+  const togglePassageBtn = document.getElementById('btn-toggle-passage-content');
+  passageEl.textContent = q.passage_or_script || 'Bağlam metni veya ses senaryosu kayıtlı değil.';
+  passageEl.style.display = 'none'; // closed by default
+  if (togglePassageBtn) togglePassageBtn.textContent = 'Metni Göster';
+
+  modal.classList.add('active');
+}
+
+function initQuestionBankEvents() {
+  const searchInput = document.getElementById('bank-search-input');
+  if (searchInput) searchInput.addEventListener('input', renderQuestionBankTable);
+
+  const modFilter = document.getElementById('bank-filter-module');
+  if (modFilter) modFilter.addEventListener('change', renderQuestionBankTable);
+
+  const modeFilter = document.getElementById('bank-filter-mode');
+  if (modeFilter) modeFilter.addEventListener('change', renderQuestionBankTable);
+
+  const refreshBtn = document.getElementById('btn-refresh-bank');
+  if (refreshBtn) refreshBtn.addEventListener('click', loadQuestionBank);
+
+  const gotoBankBtn = document.getElementById('btn-goto-bank');
+  if (gotoBankBtn) gotoBankBtn.addEventListener('click', () => switchModule('bank'));
+
+  // Close Detail Modal
+  const closeBtn1 = document.getElementById('btn-close-qdetail');
+  const closeBtn2 = document.getElementById('btn-close-qdetail-footer');
+  const modal = document.getElementById('modal-question-detail');
+  
+  if (closeBtn1 && modal) closeBtn1.addEventListener('click', () => modal.classList.remove('active'));
+  if (closeBtn2 && modal) closeBtn2.addEventListener('click', () => modal.classList.remove('active'));
+  if (modal) {
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) modal.classList.remove('active');
+    });
+  }
+
+  // Toggle Passage / Script
+  const togglePassageBtn = document.getElementById('btn-toggle-passage-content');
+  const passageEl = document.getElementById('qdetail-modal-passage');
+  if (togglePassageBtn && passageEl) {
+    togglePassageBtn.addEventListener('click', () => {
+      if (passageEl.style.display === 'none' || !passageEl.style.display) {
+        passageEl.style.display = 'block';
+        togglePassageBtn.textContent = 'Metni Gizle';
+      } else {
+        passageEl.style.display = 'none';
+        togglePassageBtn.textContent = 'Metni Göster';
+      }
+    });
+  }
+}
+
+function getModuleBadge(mod) {
+  if (mod === 'Reading') return 'badge-cyan';
+  if (mod === 'Listening') return 'badge-emerald';
+  if (mod === 'Writing') return 'badge-purple';
+  if (mod === 'Speaking') return 'badge-amber';
+  return 'badge-cyan';
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }

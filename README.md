@@ -1,8 +1,8 @@
-# 🛡️ ForenSync Academy: IELTS & Cyber Prep Suite
+# 🎓 IELTS: Band 7.5+ Master Prep Suite
 
 **Oracle Cloud (OCI) Uyumlu, Mobil Öncelikli, Çift Modlu Tam IELTS Sınav ve Hazırlık Platformu**
 
-ForenSync Academy, **Adli Bilişim (Digital Forensics)** ve **Siber Güvenlik** profesyonellerine Jean Monnet Bursu ve Cambridge IELTS 7.5+ seviyesine yönelik hazırlanmış, aynı zamanda standart **Cambridge IELTS Academic** formatını da destekleyen yeni nesil bir yapay zeka çalışma istasyonudur.
+IELTS Master Prep Suite, Cambridge IELTS 7.5+ akademik hazırlık ile Adli Bilişim (Digital Forensics) ve Siber Güvenlik profesyonellerine yönelik Jean Monnet Burs standartlarını bir araya getiren yeni nesil bir yapay zeka çalışma istasyonudur.
 
 ---
 

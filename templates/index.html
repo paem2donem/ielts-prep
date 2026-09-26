@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#090d16">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>ForenSync Academy - IELTS 7.5+ & Jean Monnet Prep Suite</title>
+  <title>IELTS - Band 7.5+ Master Prep Suite</title>
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -20,10 +20,10 @@
   <header class="app-header">
     <div class="header-container">
       <div class="brand-section">
-        <div class="brand-icon">🛡️</div>
+        <div class="brand-icon">🎓</div>
         <div>
-          <div class="brand-title">ForenSync Academy</div>
-          <div class="brand-subtitle">IELTS 7.5+ & Cyber Prep</div>
+          <div class="brand-title">IELTS</div>
+          <div class="brand-subtitle">Band 7.5+ Master Prep Suite</div>
         </div>
       </div>
 
@@ -53,6 +53,7 @@
         <button class="nav-item" data-module-target="tricks">💡 Taktikler & Hileler</button>
         <button class="nav-item" data-module-target="mistakes">❌ Yanlış Defteri</button>
         <button class="nav-item" data-module-target="mentor">🧠 AI Mentor</button>
+        <button class="nav-item" data-module-target="bank">📂 Soru Bankası</button>
       </nav>
     </div>
   </header>
@@ -361,6 +362,17 @@
           </div>
         </div>
 
+        <!-- Question Bank Quick Access Banner -->
+        <div style="display: flex; align-items: center; justify-content: space-between; background: linear-gradient(135deg, rgba(30, 41, 59, 0.7), rgba(15, 23, 42, 0.9)); border: 1px solid var(--border-glass); border-left: 4px solid var(--accent-cyan); padding: 14px 18px; border-radius: 8px; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+          <div>
+            <div style="font-weight: 700; color: #ffffff; font-size: 1rem;">📂 Veritabanındaki Tüm Sınav Soruları (Soru Bankası)</div>
+            <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 2px;">Cambridge 18, 17, Jean Monnet ve AI üretimi tüm soruları tablo olarak listeleyin, doğru cevapları ve çözümleri inceleyin.</div>
+          </div>
+          <button id="btn-goto-bank" class="btn btn-outline" style="border-color: var(--accent-cyan); color: var(--accent-cyan); padding: 6px 16px;">
+            📚 Soru Bankasını Aç (Tablo)
+          </button>
+        </div>
+
         <!-- History Table -->
         <div class="card">
           <div style="font-weight: 700; margin-bottom: 12px; color: var(--text-main);">Son Test Kayıtlarım</div>
@@ -384,7 +396,106 @@
       </div>
     </section>
 
+    <!-- ================= PANEL 8: QUESTION BANK ================= -->
+    <section id="panel-bank" class="panel-view">
+      <div class="card">
+        <div class="card-title">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <span>📂</span> IELTS Soru Bankası & Veritabanı
+          </div>
+          <div class="badge badge-cyan" id="bank-total-count-badge">Yükleniyor...</div>
+        </div>
+        <div class="card-desc">Veritabanında kayıtlı tüm Cambridge, Adli Bilişim ve AI üretimi sorular. Filtreleyin, arayın ve soru içeriği ile doğru cevabı detaylıca inceleyin.</div>
+
+        <!-- Filter and Search Bar -->
+        <div style="display: flex; gap: 10px; margin-top: 14px; margin-bottom: 16px; flex-wrap: wrap; background: rgba(15, 23, 42, 0.4); padding: 12px; border-radius: 8px; border: 1px solid var(--border-glass);">
+          <div style="flex: 1; min-width: 200px;">
+            <input type="text" id="bank-search-input" class="input-fill" placeholder="🔍 Soru kökü, sınav adı veya anahtar kelime ara..." style="width: 100%;">
+          </div>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <select id="bank-filter-module" class="input-fill" style="padding: 6px 12px; font-size: 0.85rem; border-radius: 6px;">
+              <option value="all">Tüm Modüller</option>
+              <option value="Reading">📖 Reading</option>
+              <option value="Listening">🎧 Listening</option>
+              <option value="Writing">✍️ Writing</option>
+              <option value="Speaking">🎙️ Speaking</option>
+            </select>
+            <select id="bank-filter-mode" class="input-fill" style="padding: 6px 12px; font-size: 0.85rem; border-radius: 6px;">
+              <option value="all">Tüm Modlar</option>
+              <option value="academic">🎓 Cambridge Academic</option>
+              <option value="cyber">⚡ Adli Bilişim & Cyber</option>
+            </select>
+            <button id="btn-refresh-bank" class="btn btn-outline" style="padding: 6px 12px; font-size: 0.85rem;">🔄 Yenile</button>
+          </div>
+        </div>
+
+        <!-- Questions Table -->
+        <div class="table-responsive">
+          <table class="custom-table">
+            <thead>
+              <tr>
+                <th style="width: 80px;">ID</th>
+                <th style="width: 100px;">Modül</th>
+                <th>Sınav / Kaynak</th>
+                <th style="width: 130px;">Soru Tipi</th>
+                <th>Soru / Görev Özeti</th>
+                <th style="width: 140px; text-align: center;">İşlem</th>
+              </tr>
+            </thead>
+            <tbody id="bank-table-body">
+              <tr><td colspan="6" style="text-align: center; padding: 24px;">Soru bankası yükleniyor...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
   </main>
+
+  <!-- Question Detail Modal Popup -->
+  <div id="modal-question-detail" class="modal-overlay">
+    <div class="modal-box" style="max-width: 680px; max-height: 85vh; overflow-y: auto;">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; border-bottom: 1px solid var(--border-glass); padding-bottom: 10px;">
+        <div>
+          <div id="qdetail-modal-badges" style="display: flex; gap: 6px; margin-bottom: 6px;"></div>
+          <h3 id="qdetail-modal-source" style="color: var(--accent-cyan); font-size: 1.15rem; margin: 0;">Soru Kaynağı</h3>
+        </div>
+        <button id="btn-close-qdetail" style="background: transparent; border: none; color: var(--text-dim); font-size: 1.4rem; cursor: pointer; padding: 0 4px;">✕</button>
+      </div>
+
+      <div style="margin-bottom: 14px;">
+        <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Soru / Yönerge:</div>
+        <div id="qdetail-modal-prompt" style="font-size: 0.95rem; color: #ffffff; font-weight: 600; line-height: 1.5; background: rgba(30, 41, 59, 0.4); padding: 10px 12px; border-radius: 6px; border-left: 3px solid var(--accent-cyan);"></div>
+      </div>
+
+      <div id="qdetail-modal-options-box" style="margin-bottom: 14px; display: none;">
+        <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px;">Seçenekler:</div>
+        <div id="qdetail-modal-options" style="display: flex; gap: 8px; flex-wrap: wrap;"></div>
+      </div>
+
+      <div style="margin-bottom: 14px;">
+        <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">✅ Doğru Cevap / Beklenen Yanıt:</div>
+        <div id="qdetail-modal-answer" style="font-size: 1.05rem; font-weight: 700; color: #10b981; background: rgba(16, 185, 129, 0.12); padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(16, 185, 129, 0.3);"></div>
+      </div>
+
+      <div style="margin-bottom: 14px;">
+        <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">💡 Çözüm Açıklaması & Cambridge Taktiği:</div>
+        <div id="qdetail-modal-explanation" style="font-size: 0.9rem; line-height: 1.6; color: var(--text-main); background: rgba(56, 189, 248, 0.08); padding: 10px 12px; border-radius: 6px; border: 1px solid rgba(56, 189, 248, 0.2);"></div>
+      </div>
+
+      <div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">📄 İlgili Okuma Metni / Dinleme Senaryosu:</div>
+          <button id="btn-toggle-passage-content" class="btn btn-outline" style="padding: 2px 8px; font-size: 0.75rem; min-height: 24px;">Metni Göster / Gizle</button>
+        </div>
+        <div id="qdetail-modal-passage" style="display: none; font-size: 0.85rem; line-height: 1.6; color: var(--text-muted); max-height: 220px; overflow-y: auto; background: rgba(15, 23, 42, 0.6); padding: 10px 12px; border-radius: 6px; border: 1px solid var(--border-glass); white-space: pre-wrap;"></div>
+      </div>
+
+      <div style="margin-top: 18px; text-align: right;">
+        <button id="btn-close-qdetail-footer" class="btn btn-outline" style="padding: 6px 16px;">Kapat</button>
+      </div>
+    </div>
+  </div>
 
   <!-- Mobile Bottom Navigation Bar -->
   <nav class="bottom-nav">
@@ -411,6 +522,10 @@
     <button class="mobile-nav-btn" data-module-target="mentor">
       <svg viewBox="0 0 24 24" fill="none"><path d="M12 2a10 10 0 100 20 10 10 0 000-20z"/><path d="M12 6v6l4 2"/></svg>
       <span>Mentor</span>
+    </button>
+    <button class="mobile-nav-btn" data-module-target="bank">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      <span>Banka</span>
     </button>
   </nav>
 
