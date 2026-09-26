@@ -127,10 +127,15 @@
     <section id="panel-speaking" class="panel-view">
       <div class="card">
         <div class="card-title">
-          <div><span>🎙️</span> IELTS Speaking Booth</div>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <span>🎙️</span> IELTS Speaking Booth
+            <button id="btn-generate-ai-speaking" class="btn btn-ai-magic" style="padding: 4px 12px; min-height: 32px; font-size: 0.8rem;">
+              ✨ Yeni Konuşma Sınavı Üret
+            </button>
+          </div>
           <div class="badge badge-purple">Çok Modlu Ses Yapay Zekası</div>
         </div>
-        <div class="card-desc">Part 2 Cue Card formatında konuşmanızı mikrofona kaydedin; yapay zeka sesinizi dinleyip telaffuz, akıcılık ve kelime analizi yapsın.</div>
+        <div class="card-desc">Part 2 Cue Card formatında konuşmanızı mikrofona kaydedin veya ses dosyanızı yükleyin; yapay zeka sesinizi dinleyip telaffuz, akıcılık ve kelime analizi yapsın.</div>
 
         <div class="writing-layout">
           <div>
@@ -154,7 +159,20 @@
               </button>
               <div id="speaking-record-time" style="font-family: var(--font-mono); font-size: 1.4rem; font-weight: 700; margin-bottom: 8px;">00:00</div>
               <div style="font-size: 0.85rem; color: var(--text-muted); max-width: 320px;">
-                Kırmızı butona basarak konuşmaya başlayın. 1 - 2 dakika boyunca akıcı ve net konuşun. Bitirmek için tekrar basın.
+                Mikrofon butonuna basarak konuşmaya başlayın (1 - 2 dakika). Veya telefonunuzdan kaydettiğiniz sesi doğrudan yükleyin.
+              </div>
+
+              <!-- Fallback / Alternative File Upload Button -->
+              <div style="margin-top: 14px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <input type="file" id="speaking-file-input" accept="audio/*" style="display: none;">
+                <button id="btn-upload-audio-file" class="btn btn-outline" style="font-size: 0.8rem; padding: 6px 12px; border-color: var(--accent-cyan); color: var(--accent-cyan);">
+                  📁 Ses Dosyası Seç / Yükle (Alternatif)
+                </button>
+              </div>
+
+              <!-- Insecure HTTP Info Notice -->
+              <div id="speaking-mic-warning" style="display: none; margin-top: 12px; font-size: 0.78rem; line-height: 1.4; color: var(--accent-amber); background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.25); padding: 8px 12px; border-radius: 6px; text-align: left;">
+                ℹ️ <strong>Tarayıcı Güvenlik Uyarısı:</strong> Tarayıcınız güvensiz HTTP (IP) üzerinden doğrudan mikrofon erişimini kısıtlamıştır. <strong>'📁 Ses Dosyası Seç / Yükle'</strong> butonuyla ses kaydınızı seçerek sınavınıza kesintisiz devam edebilirsiniz.
               </div>
 
               <audio id="speaking-audio-preview" controls style="display: none; margin-top: 16px; width: 100%; max-width: 340px;"></audio>
@@ -248,6 +266,9 @@
               <!-- Populated by JS -->
             </select>
           </div>
+          <button id="btn-generate-ai-listening" class="btn btn-ai-magic" style="padding: 6px 14px; min-height: 32px; font-size: 0.82rem;">
+            ✨ Yapay Zeka ile Yeni Dinleme Sınavı Üret
+          </button>
         </div>
 
         <div class="audio-station">

@@ -1,5 +1,5 @@
 # ==========================================
-# ForenSync Academy: IELTS & Cyber Prep
+# IELTS Band 7.5+ Master Prep Suite
 # Production Dockerfile for Oracle Cloud (OCI)
 # ==========================================
 FROM python:3.11-slim

@@ -14,6 +14,7 @@ const state = {
   currentModule: 'writing',
   examData: null,
   activeCustomPassage: null,
+  activeCustomSection: null,
   allQuestions: [],
 
   // Timers
@@ -244,6 +245,67 @@ function initDynamicGenerators() {
       }
     });
   }
+
+  // Listening AI Generator
+  const btnGenListening = document.getElementById('btn-generate-ai-listening');
+  if (btnGenListening) {
+    btnGenListening.addEventListener('click', async () => {
+      btnGenListening.disabled = true;
+      btnGenListening.innerHTML = '<span class="spinner"></span> AI Dinleme Sınavı Üretiliyor...';
+
+      try {
+        const res = await fetch('/api/exam/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ module: 'listening', mode: state.currentMode })
+        });
+        const data = await res.json();
+        if (data.success) {
+          state.activeCustomSection = data.data;
+          renderListeningModule();
+          alert('✨ Yeni Cambridge IELTS Dinleme Sınavı (Audio Script + 4 Soru) başarıyla üretildi!');
+        } else {
+          alert('Üretim hatası: ' + (data.detail || 'Bilinmeyen hata'));
+        }
+      } catch (e) {
+        alert('Üretim hatası: ' + e.message);
+      } finally {
+        btnGenListening.disabled = false;
+        btnGenListening.innerHTML = '✨ Yapay Zeka ile Yeni Dinleme Sınavı Üret';
+      }
+    });
+  }
+
+  // Speaking AI Generator
+  const btnGenSpeaking = document.getElementById('btn-generate-ai-speaking');
+  if (btnGenSpeaking) {
+    btnGenSpeaking.addEventListener('click', async () => {
+      btnGenSpeaking.disabled = true;
+      btnGenSpeaking.innerHTML = '<span class="spinner"></span> AI Konuşma Sınavı Üretiliyor...';
+
+      try {
+        const res = await fetch('/api/exam/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ module: 'speaking', mode: state.currentMode })
+        });
+        const data = await res.json();
+        if (data.success) {
+          if (!state.examData) state.examData = {};
+          state.examData.speaking = data.data;
+          renderSpeakingModule();
+          alert('✨ Yeni Cambridge IELTS Konuşma Sınavı (Part 1, Cue Card ve Part 3) başarıyla oluşturuldu!');
+        } else {
+          alert('Üretim hatası: ' + (data.detail || 'Bilinmeyen hata'));
+        }
+      } catch (e) {
+        alert('Üretim hatası: ' + e.message);
+      } finally {
+        btnGenSpeaking.disabled = false;
+        btnGenSpeaking.innerHTML = '✨ Yeni Konuşma Sınavı Üret';
+      }
+    });
+  }
 }
 
 /* ================= Reading Module ================= */
@@ -382,35 +444,55 @@ let currentListeningSection = 'section_1';
 
 function renderListeningModule() {
   const listeningData = state.examData ? state.examData.listening : null;
-  if (!listeningData) return;
+  if (!listeningData && !state.activeCustomSection) return;
 
   // Populate Listening Selector Dropdown
   const selector = document.getElementById('listening-test-selector');
-  if (selector) {
+  if (selector && listeningData) {
     selector.innerHTML = '';
     Object.keys(listeningData).forEach(key => {
       const opt = document.createElement('option');
       opt.value = key;
       opt.textContent = listeningData[key].title;
-      if (key === currentListeningSection) {
+      if (!state.activeCustomSection && key === currentListeningSection) {
         opt.selected = true;
       }
       selector.appendChild(opt);
     });
 
+    if (state.activeCustomSection) {
+      const opt = document.createElement('option');
+      opt.value = 'custom_ai';
+      opt.textContent = `✨ [AI Canlı Dinleme] ${state.activeCustomSection.title}`;
+      opt.selected = true;
+      selector.appendChild(opt);
+    }
+
     selector.onchange = (e) => {
-      currentListeningSection = e.target.value;
-      renderListeningContent(listeningData[currentListeningSection]);
+      const val = e.target.value;
+      if (val === 'custom_ai') {
+        if (state.activeCustomSection) {
+          renderListeningContent(state.activeCustomSection, true);
+        }
+      } else {
+        state.activeCustomSection = null;
+        currentListeningSection = val;
+        renderListeningContent(listeningData[val], false);
+      }
     };
   }
 
-  const section = listeningData[currentListeningSection] || listeningData['section_1'];
-  renderListeningContent(section);
+  if (state.activeCustomSection) {
+    renderListeningContent(state.activeCustomSection, true);
+  } else if (listeningData) {
+    const section = listeningData[currentListeningSection] || listeningData['section_1'];
+    renderListeningContent(section, false);
+  }
 }
 
-function renderListeningContent(section) {
+function renderListeningContent(section, isCustom = false) {
   if (!section) return;
-  document.getElementById('listening-section-title').textContent = section.title;
+  document.getElementById('listening-section-title').textContent = (isCustom ? '✨ [AI Canlı Sınav] ' : '') + section.title;
   document.getElementById('listening-section-intro').textContent = section.intro;
 
   const qContainer = document.getElementById('listening-questions-container');
@@ -450,6 +532,14 @@ function renderListeningContent(section) {
 
 async function loadListeningAudio(mode, sectionId) {
   const trackTitle = document.getElementById('track-title');
+  if (!trackTitle) return;
+
+  if (state.activeCustomSection) {
+    trackTitle.textContent = '✨ AI Ses Metni Hazır (Oynata Basarak Dinleyin)';
+    state.audioElement.src = '';
+    return;
+  }
+
   trackTitle.textContent = 'Audio loading...';
 
   try {
@@ -472,6 +562,33 @@ async function loadListeningAudio(mode, sectionId) {
 const playBtn = document.getElementById('btn-play-listening');
 if (playBtn) {
   playBtn.addEventListener('click', () => {
+    if (state.activeCustomSection) {
+      if (window.speechSynthesis) {
+        if (state.isPlaying) {
+          window.speechSynthesis.cancel();
+          playBtn.innerHTML = '▶';
+          state.isPlaying = false;
+        } else {
+          window.speechSynthesis.cancel();
+          const utterance = new SpeechSynthesisUtterance(state.activeCustomSection.audio_script);
+          utterance.lang = 'en-GB';
+          utterance.rate = 0.95;
+          utterance.onend = () => {
+            playBtn.innerHTML = '▶';
+            state.isPlaying = false;
+          };
+          utterance.onerror = () => {
+            playBtn.innerHTML = '▶';
+            state.isPlaying = false;
+          };
+          window.speechSynthesis.speak(utterance);
+          playBtn.innerHTML = '⏸';
+          state.isPlaying = true;
+        }
+      }
+      return;
+    }
+
     if (state.audioElement.src) {
       if (state.isPlaying) {
         state.audioElement.pause();
@@ -483,7 +600,7 @@ if (playBtn) {
         state.isPlaying = true;
       }
     } else {
-      const section = state.examData.listening[currentListeningSection];
+      const section = state.examData ? state.examData.listening[currentListeningSection] : null;
       if (window.speechSynthesis && section) {
         window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(section.audio_script);
@@ -510,7 +627,8 @@ if (playBtn) {
 const submitListeningBtn = document.getElementById('btn-submit-listening');
 if (submitListeningBtn) {
   submitListeningBtn.addEventListener('click', async () => {
-    const section = state.examData.listening[currentListeningSection];
+    const section = state.activeCustomSection || (state.examData && state.examData.listening ? state.examData.listening[currentListeningSection] : null);
+    if (!section) return;
     const answers = {};
 
     section.questions.forEach(q => {
@@ -524,7 +642,7 @@ if (submitListeningBtn) {
     });
 
     submitListeningBtn.disabled = true;
-    submitListeningBtn.innerHTML = '<span class="spinner"></span> Grading...';
+    submitListeningBtn.innerHTML = '<span class="spinner"></span> Sınav Notlandırılıyor...';
 
     try {
       const res = await fetch('/api/grade/listening', {
@@ -532,9 +650,10 @@ if (submitListeningBtn) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           mode: state.currentMode,
-          section_id: currentListeningSection,
+          section_id: state.activeCustomSection ? 'custom_ai' : currentListeningSection,
           answers: answers,
-          user_email: state.currentUser.email
+          user_email: state.currentUser.email,
+          custom_section: state.activeCustomSection || null
         })
       });
 
@@ -650,15 +769,46 @@ function renderWritingModule() {
 let currentSpeakingPart = 'Part 2';
 
 function renderSpeakingModule() {
-  const speakingData = state.examData.speaking;
+  const speakingData = state.examData ? state.examData.speaking : null;
   if (!speakingData) return;
 
   const cueCardElem = document.getElementById('speaking-cue-card-box');
   const partData = speakingData.part_2;
-  cueCardElem.innerHTML = `
-    <div style="font-weight: 700; color: var(--accent-cyan); margin-bottom: 8px;">IELTS Speaking Part 2 - Cue Card:</div>
-    <div class="cue-card">${partData.cue_card.trim().replace(/\n/g, '<br>')}</div>
-  `;
+  const examTitle = speakingData.title ? `<div style="font-size: 0.85rem; color: var(--accent-purple); font-weight: 600; margin-bottom: 8px;">🎯 ${speakingData.title}</div>` : '';
+
+  let part1Html = '';
+  if (speakingData.part_1 && speakingData.part_1.questions && speakingData.part_1.questions.length > 0) {
+    part1Html = `
+      <details style="margin-bottom: 12px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 12px;">
+        <summary style="cursor: pointer; font-size: 0.82rem; font-weight: 600; color: var(--accent-cyan);">📋 Part 1 Isınma Sorularını İncele (${speakingData.part_1.questions.length} Soru)</summary>
+        <ul style="margin: 8px 0 0 16px; font-size: 0.82rem; color: var(--text-main); line-height: 1.6;">
+          ${speakingData.part_1.questions.map(q => `<li>${q}</li>`).join('')}
+        </ul>
+      </details>
+    `;
+  }
+
+  let part3Html = '';
+  if (speakingData.part_3 && speakingData.part_3.questions && speakingData.part_3.questions.length > 0) {
+    part3Html = `
+      <details style="margin-top: 12px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 12px;">
+        <summary style="cursor: pointer; font-size: 0.82rem; font-weight: 600; color: var(--accent-purple);">💡 Part 3 Analitik Tartışma Sorularını İncele (${speakingData.part_3.questions.length} Soru)</summary>
+        <ul style="margin: 8px 0 0 16px; font-size: 0.82rem; color: var(--text-main); line-height: 1.6;">
+          ${speakingData.part_3.questions.map(q => `<li>${q}</li>`).join('')}
+        </ul>
+      </details>
+    `;
+  }
+
+  if (partData && partData.cue_card) {
+    cueCardElem.innerHTML = `
+      ${examTitle}
+      ${part1Html}
+      <div style="font-weight: 700; color: var(--accent-cyan); margin-bottom: 8px;">IELTS Speaking Part 2 - Cue Card (1 dk Hazırlık, 2 dk Konuşma):</div>
+      <div class="cue-card">${partData.cue_card.trim().replace(/\n/g, '<br>')}</div>
+      ${part3Html}
+    `;
+  }
 }
 
 function initSpeakingRecorder() {
@@ -666,8 +816,62 @@ function initSpeakingRecorder() {
   const audioPreview = document.getElementById('speaking-audio-preview');
   const submitBtn = document.getElementById('btn-submit-speaking');
   const timerDisplay = document.getElementById('speaking-record-time');
+  const micWarning = document.getElementById('speaking-mic-warning');
+  const fileInput = document.getElementById('speaking-file-input');
+  const uploadBtn = document.getElementById('btn-upload-audio-file');
+
+  // Check if getUserMedia is actually supported in the current browser and origin context
+  const hasMediaDevices = Boolean(
+    navigator && 
+    navigator.mediaDevices && 
+    typeof navigator.mediaDevices.getUserMedia === 'function'
+  );
+
+  // If HTTP / insecure context, display informative warning banner gracefully
+  if (!hasMediaDevices && micWarning) {
+    micWarning.style.display = 'block';
+  }
+
+  // Handle direct audio file upload (mobile voice memo / desktop recording)
+  if (uploadBtn && fileInput) {
+    uploadBtn.addEventListener('click', () => {
+      fileInput.click();
+    });
+
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+
+      state.recordedBlob = file;
+      audioPreview.src = URL.createObjectURL(file);
+      audioPreview.style.display = 'block';
+      submitBtn.disabled = false;
+      timerDisplay.textContent = 'Yüklendi';
+
+      const existingNotice = document.getElementById('speaking-file-info-badge');
+      if (existingNotice) existingNotice.remove();
+
+      const badge = document.createElement('div');
+      badge.id = 'speaking-file-info-badge';
+      badge.className = 'badge badge-green';
+      badge.style.marginTop = '10px';
+      badge.textContent = `✓ Ses dosyası seçildi: ${file.name} (${Math.round(file.size / 1024)} KB)`;
+      audioPreview.parentNode.insertBefore(badge, audioPreview.nextSibling);
+    });
+  }
 
   recordBtn.addEventListener('click', async () => {
+    // If browser doesn't have getUserMedia (e.g. plain HTTP IP), trigger file picker seamlessly without throwing
+    if (!hasMediaDevices) {
+      if (micWarning) micWarning.style.display = 'block';
+      if (fileInput) {
+        fileInput.click();
+      } else {
+        alert('Tarayıcınız güvensiz HTTP bağlantısında mikrofon erişimini kısıtlamıştır. Lütfen ses dosyanızı yükleyin.');
+      }
+      return;
+    }
+
     if (!state.isRecording) {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -700,10 +904,17 @@ function initSpeakingRecorder() {
         }, 1000);
 
       } catch (err) {
-        alert('Microphone access denied: ' + err.message);
+        if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+          alert('Mikrofon erişim izni verilmedi. Tarayıcı ayarlarından izni açabilir veya doğrudan "Ses Dosyası Seç / Yükle" butonuyla ses kaydınızı yükleyebilirsiniz.');
+        } else {
+          alert('Mikrofon başlatılamadı: ' + err.message + '. Alternatif olarak ses dosyanızı yükleyebilirsiniz.');
+        }
+        if (micWarning) micWarning.style.display = 'block';
       }
     } else {
-      state.mediaRecorder.stop();
+      if (state.mediaRecorder && state.mediaRecorder.state !== 'inactive') {
+        state.mediaRecorder.stop();
+      }
       state.isRecording = false;
       recordBtn.classList.remove('recording');
       recordBtn.innerHTML = '🎙️';
@@ -715,13 +926,17 @@ function initSpeakingRecorder() {
     if (!state.recordedBlob) return;
 
     submitBtn.disabled = true;
-    submitBtn.innerHTML = '<span class="spinner"></span> AI Listening & Analyzing...';
+    submitBtn.innerHTML = '<span class="spinner"></span> AI Dinliyor & Analiz Ediyor...';
 
     const feedbackArea = document.getElementById('speaking-feedback-area');
-    feedbackArea.innerHTML = '<div style="text-align:center; padding: 20px;"><span class="spinner"></span> Multimodal Gemini Speech Engine transcribing and scoring your speech...</div>';
+    feedbackArea.innerHTML = '<div style="text-align:center; padding: 20px;"><span class="spinner"></span> Çok Modlu Gemini Ses Motoru konuşmanızı dinliyor ve Cambridge kriterleriyle puanlıyor...</div>';
+
+    const filename = (state.recordedBlob instanceof File && state.recordedBlob.name) 
+      ? state.recordedBlob.name 
+      : 'speech_recording.webm';
 
     const formData = new FormData();
-    formData.append('audio', state.recordedBlob, 'speech_recording.webm');
+    formData.append('audio', state.recordedBlob, filename);
     formData.append('part', currentSpeakingPart);
     formData.append('mode', state.currentMode);
     formData.append('prompt_context', document.getElementById('speaking-cue-card-box').textContent);

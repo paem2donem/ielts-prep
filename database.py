@@ -6,15 +6,24 @@ from typing import List, Dict, Any, Optional
 
 DB_FILE = "tracker.db"
 
+def get_connection():
+    """Provides a hardened SQLite connection with WAL mode, 30s busy timeout, and durability checks."""
+    conn = sqlite3.connect(DB_FILE, timeout=30.0)
+    conn.execute("PRAGMA journal_mode = WAL;")
+    conn.execute("PRAGMA busy_timeout = 30000;")
+    conn.execute("PRAGMA synchronous = NORMAL;")
+    conn.execute("PRAGMA foreign_keys = ON;")
+    return conn
+
 def init_db():
-    conn = sqlite3.connect(DB_FILE)
+    conn = get_connection()
     cursor = conn.cursor()
 
     # 1. Scores Table
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS scores (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_email TEXT DEFAULT 'guest@forensync.academy',
+            user_email TEXT DEFAULT 'paem2.donem@gmail.com',
             date TEXT,
             mode TEXT DEFAULT 'cyber',
             module TEXT,
@@ -29,7 +38,7 @@ def init_db():
     cursor.execute("PRAGMA table_info(scores)")
     existing_cols = [col[1] for col in cursor.fetchall()]
     if "user_email" not in existing_cols:
-        cursor.execute("ALTER TABLE scores ADD COLUMN user_email TEXT DEFAULT 'guest@forensync.academy'")
+        cursor.execute("ALTER TABLE scores ADD COLUMN user_email TEXT DEFAULT 'paem2.donem@gmail.com'")
     if "mode" not in existing_cols:
         cursor.execute("ALTER TABLE scores ADD COLUMN mode TEXT DEFAULT 'cyber'")
     if "raw_score" not in existing_cols:
@@ -102,7 +111,7 @@ def get_or_create_user(email: str, name: Optional[str] = None) -> Dict[str, Any]
     if not name:
         name = email.split('@')[0].capitalize()
     
-    conn = sqlite3.connect(DB_FILE)
+    conn = get_connection()
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
     
@@ -131,8 +140,8 @@ def get_or_create_user(email: str, name: Optional[str] = None) -> Dict[str, Any]
     return user_dict
 
 # Score Records
-def save_score_record(module: str, task_type: str, score: float, feedback: str, mode: str = "cyber", raw_score: str = "", user_email: str = "guest@forensync.academy") -> int:
-    conn = sqlite3.connect(DB_FILE)
+def save_score_record(module: str, task_type: str, score: float, feedback: str, mode: str = "cyber", raw_score: str = "", user_email: str = "paem2.donem@gmail.com") -> int:
+    conn = get_connection()
     cursor = conn.cursor()
     date_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     cursor.execute(
@@ -144,12 +153,16 @@ def save_score_record(module: str, task_type: str, score: float, feedback: str, 
     )
     last_id = cursor.lastrowid
     conn.commit()
+    try:
+        conn.execute("PRAGMA wal_checkpoint(PASSIVE);")
+    except Exception:
+        pass
     conn.close()
     return last_id
 
 # Mistake Notebook (Yanlış Defteri)
 def record_mistake(user_email: str, module: str, prompt: str, user_ans: str, correct_ans: str, explanation: str, trick: str = ""):
-    conn = sqlite3.connect(DB_FILE)
+    conn = get_connection()
     cursor = conn.cursor()
     date_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     cursor.execute(
@@ -160,10 +173,14 @@ def record_mistake(user_email: str, module: str, prompt: str, user_ans: str, cor
         (user_email.lower(), module, prompt, user_ans, correct_ans, explanation, trick, date_str)
     )
     conn.commit()
+    try:
+        conn.execute("PRAGMA wal_checkpoint(PASSIVE);")
+    except Exception:
+        pass
     conn.close()
 
 def get_user_mistakes(user_email: str, unresolved_only: bool = True) -> List[Dict[str, Any]]:
-    conn = sqlite3.connect(DB_FILE)
+    conn = get_connection()
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
     query = "SELECT * FROM user_mistakes WHERE user_email = ?"
@@ -178,7 +195,7 @@ def get_user_mistakes(user_email: str, unresolved_only: bool = True) -> List[Dic
 
 # Analytics Summary per User
 def get_user_analytics(user_email: str) -> Dict[str, Any]:
-    conn = sqlite3.connect(DB_FILE)
+    conn = get_connection()
     try:
         df = pd.read_sql_query("SELECT * FROM scores WHERE LOWER(user_email) = ? ORDER BY id ASC", conn, params=(user_email.lower(),))
     except Exception:
@@ -234,7 +251,7 @@ def get_user_analytics(user_email: str) -> Dict[str, Any]:
 
 # Question Bank
 def save_generated_question(q_id: str, mode: str, module: str, title: str, payload: dict):
-    conn = sqlite3.connect(DB_FILE)
+    conn = get_connection()
     cursor = conn.cursor()
     now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     cursor.execute(
@@ -245,10 +262,14 @@ def save_generated_question(q_id: str, mode: str, module: str, title: str, paylo
         (q_id, mode, module, title, json.dumps(payload), now_str)
     )
     conn.commit()
+    try:
+        conn.execute("PRAGMA wal_checkpoint(PASSIVE);")
+    except Exception:
+        pass
     conn.close()
 
 def get_generated_questions(module: str, mode: str) -> List[Dict[str, Any]]:
-    conn = sqlite3.connect(DB_FILE)
+    conn = get_connection()
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
     cursor.execute(
@@ -266,7 +287,7 @@ def get_generated_questions(module: str, mode: str) -> List[Dict[str, Any]]:
 
 def sync_all_exam_questions(exam_data: Dict[str, Any]):
     """Syncs questions from exam_data.py into the questions SQLite table."""
-    conn = sqlite3.connect(DB_FILE)
+    conn = get_connection()
     cursor = conn.cursor()
     now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -431,7 +452,7 @@ def sync_all_exam_questions(exam_data: Dict[str, Any]):
 
 def get_all_questions_list(module: Optional[str] = None, mode: Optional[str] = None, search: Optional[str] = None) -> List[Dict[str, Any]]:
     """Returns all questions with flexible filtering and search for the candidate's question bank."""
-    conn = sqlite3.connect(DB_FILE)
+    conn = get_connection()
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
@@ -471,5 +492,69 @@ def get_all_questions_list(module: Optional[str] = None, mode: Optional[str] = N
         results.append(d)
 
     return results
+
+def save_single_question_record(
+    q_id: str,
+    mode: str,
+    module: str,
+    source: str,
+    passage_or_script: str,
+    prompt: str,
+    q_type: str,
+    options: List[str] = None,
+    answer: str = "",
+    accepted: List[str] = None,
+    explanation: str = "",
+    trick_tip: str = ""
+) -> bool:
+    """Safely saves or updates a question in the unified questions table, preserving identical format."""
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        opts_json = json.dumps(options or [])
+        acc_json = json.dumps(accepted or ([answer] if answer else []))
+
+        cursor.execute('''
+            INSERT OR REPLACE INTO questions 
+            (id, mode, module, source, passage_or_script, prompt, q_type, options_json, answer, accepted_json, explanation, trick_tip, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            str(q_id),
+            str(mode),
+            str(module),
+            str(source),
+            str(passage_or_script or ""),
+            str(prompt),
+            str(q_type),
+            opts_json,
+            str(answer or ""),
+            acc_json,
+            str(explanation or ""),
+            str(trick_tip or ""),
+            now_str
+        ))
+        conn.commit()
+        try:
+            conn.execute("PRAGMA wal_checkpoint(PASSIVE);")
+        except Exception:
+            pass
+        conn.close()
+        return True
+    except Exception as e:
+        print(f"Error saving question {q_id}: {e}")
+        return False
+
+def check_db_integrity() -> bool:
+    """Verifies that SQLite database is healthy and uncorrupted."""
+    try:
+        conn = get_connection()
+        res = conn.execute("PRAGMA integrity_check;").fetchone()
+        conn.close()
+        return bool(res and res[0] == "ok")
+    except Exception as e:
+        print(f"Integrity check failed: {e}")
+        return False
 
 init_db()

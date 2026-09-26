@@ -75,13 +75,14 @@ class ListeningSubmission(BaseModel):
     section_id: str = "section_1"
     answers: Dict[str, str]
     user_email: str = "paem2.donem@gmail.com"
+    custom_section: Optional[Dict[str, Any]] = None
 
 class MentorRequest(BaseModel):
     mode: str = "cyber"
     user_email: str = "paem2.donem@gmail.com"
 
 class GenerateExamRequest(BaseModel):
-    module: str = "reading" # "reading" or "writing"
+    module: str = "reading" # "reading", "writing", "listening", "speaking"
     mode: str = "cyber"
     task_type: Optional[str] = "Task 2"
 
@@ -123,7 +124,7 @@ async def get_questions_endpoint(module: Optional[str] = None, mode: Optional[st
 async def get_tricks():
     return IELTS_TRICKS
 
-# Dynamic AI Exam Generation
+# Dynamic AI Exam Generation (All 4 Modules)
 @app.post("/api/exam/generate")
 async def generate_exam(req: GenerateExamRequest):
     try:
@@ -137,37 +138,24 @@ async def generate_exam(req: GenerateExamRequest):
                 title=new_test["title"],
                 payload=new_test
             )
-            # Soru bankasına da kaydet
-            try:
-                import sqlite3, json, datetime
-                conn = sqlite3.connect(database.DB_FILE)
-                c = conn.cursor()
-                now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                for q in new_test.get("questions", []):
-                    c.execute('''
-                        INSERT OR REPLACE INTO questions 
-                        (id, mode, module, source, passage_or_script, prompt, q_type, options_json, answer, accepted_json, explanation, trick_tip, created_at)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    ''', (
-                        f"{q_id}_{q.get('id', 'q')}",
-                        req.mode,
-                        "Reading",
-                        f"AI Sınavı - {new_test.get('title', 'Okuma')}",
-                        new_test.get("text", ""),
-                        q.get("prompt", ""),
-                        "TFNG",
-                        json.dumps(q.get("options", ["TRUE", "FALSE", "NOT GIVEN"])),
-                        q.get("answer", ""),
-                        json.dumps([q.get("answer", "")]),
-                        q.get("explanation", ""),
-                        q.get("trick_tip", ""),
-                        now_str
-                    ))
-                conn.commit()
-                conn.close()
-            except Exception:
-                pass
+            # Soru bankasına aynı standart formatta kaydet
+            for q in new_test.get("questions", []):
+                database.save_single_question_record(
+                    q_id=f"{q_id}_{q.get('id', 'q')}",
+                    mode=req.mode,
+                    module="Reading",
+                    source=f"AI Sınavı - {new_test.get('title', 'Okuma')}",
+                    passage_or_script=new_test.get("text", ""),
+                    prompt=q.get("prompt", ""),
+                    q_type="TFNG",
+                    options=q.get("options", ["TRUE", "FALSE", "NOT GIVEN"]),
+                    answer=q.get("answer", ""),
+                    accepted=[q.get("answer", "")],
+                    explanation=q.get("explanation", ""),
+                    trick_tip=q.get("trick_tip", "")
+                )
             return {"success": True, "test_id": q_id, "data": new_test}
+
         elif req.module == "writing":
             new_prompt = ai_service.generate_dynamic_writing_prompt(task_type=req.task_type or "Task 2", mode=req.mode)
             q_id = f"ai_writing_{uuid.uuid4().hex[:8]}"
@@ -178,38 +166,112 @@ async def generate_exam(req: GenerateExamRequest):
                 title=new_prompt["title"],
                 payload=new_prompt
             )
-            # Soru bankasına kaydet
-            try:
-                import sqlite3, json, datetime
-                conn = sqlite3.connect(database.DB_FILE)
-                c = conn.cursor()
-                now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                c.execute('''
-                    INSERT OR REPLACE INTO questions 
-                    (id, mode, module, source, passage_or_script, prompt, q_type, options_json, answer, accepted_json, explanation, trick_tip, created_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                ''', (
-                    q_id,
-                    req.mode,
-                    "Writing",
-                    f"AI Görevi - {new_prompt.get('title', req.task_type)}",
-                    f"Min kelime: {new_prompt.get('min_words', 250)} | Anahtar kelimeler: {', '.join(new_prompt.get('key_vocabulary_tips', []))}",
-                    new_prompt.get("prompt", ""),
-                    req.task_type or "Task 2",
-                    json.dumps([]),
-                    "Model Band 8.5 Response",
-                    json.dumps([]),
-                    "Yapay zeka tarafından üretilen özgün kompozisyon konusu.",
-                    "Zaman yönetimi: Task 2 için 40 dakika ayırın, en az 250 kelime yazın.",
-                    now_str
-                ))
-                conn.commit()
-                conn.close()
-            except Exception:
-                pass
+            is_task1 = ("task_1" in (req.task_type or "").lower())
+            database.save_single_question_record(
+                q_id=q_id,
+                mode=req.mode,
+                module="Writing",
+                source=f"AI Görevi - {new_prompt.get('title', req.task_type)}",
+                passage_or_script=f"Min kelime: {new_prompt.get('min_words', 250)} | Anahtar kelimeler: {', '.join(new_prompt.get('key_vocabulary_tips', []))}",
+                prompt=new_prompt.get("prompt", ""),
+                q_type="Task 1 (Report)" if is_task1 else "Task 2 (Essay)",
+                options=[],
+                answer="Model Band 8.5 Academic Response",
+                accepted=[],
+                explanation="Yapay zeka tarafından üretilen C1-C2 akademik kompozisyon konusu.",
+                trick_tip="PEEL formatını uygulayın: Point, Evidence, Explain, Link. Zamanı iyi yönetin."
+            )
             return {"success": True, "test_id": q_id, "data": new_prompt}
+
+        elif req.module == "listening":
+            new_test = ai_service.generate_dynamic_listening_test(mode=req.mode)
+            q_id = f"ai_listening_{uuid.uuid4().hex[:8]}"
+            database.save_generated_question(
+                q_id=q_id,
+                mode=req.mode,
+                module="listening",
+                title=new_test["title"],
+                payload=new_test
+            )
+            for q in new_test.get("questions", []):
+                database.save_single_question_record(
+                    q_id=f"{q_id}_{q.get('id', 'q')}",
+                    mode=req.mode,
+                    module="Listening",
+                    source=f"AI Dinleme - {new_test.get('title', 'Section 1')}",
+                    passage_or_script=new_test.get("audio_script", ""),
+                    prompt=q.get("prompt", ""),
+                    q_type=q.get("type", "fill").upper(),
+                    options=q.get("options", []),
+                    answer=q.get("answer", ""),
+                    accepted=q.get("accepted", [q.get("answer", "")]),
+                    explanation=q.get("explanation", ""),
+                    trick_tip=q.get("trick_tip", "")
+                )
+            return {"success": True, "test_id": q_id, "data": new_test}
+
+        elif req.module == "speaking":
+            new_exam = ai_service.generate_dynamic_speaking_test(mode=req.mode)
+            q_id = f"ai_speaking_{uuid.uuid4().hex[:8]}"
+            database.save_generated_question(
+                q_id=q_id,
+                mode=req.mode,
+                module="speaking",
+                title=new_exam["title"],
+                payload=new_exam
+            )
+            # Part 1 questions
+            for idx, q_txt in enumerate(new_exam.get("part_1", {}).get("questions", [])):
+                database.save_single_question_record(
+                    q_id=f"{q_id}_p1_{idx+1}",
+                    mode=req.mode,
+                    module="Speaking",
+                    source=f"AI Speaking - {new_exam.get('title', 'Speaking Exam')} (Part 1)",
+                    passage_or_script="Giriş ve ısınma bölümü (4-5 dakika)",
+                    prompt=q_txt,
+                    q_type="Part 1 (Short Answer)",
+                    options=[],
+                    answer="Akıcı, 2-3 cümlelik doğal yanıt",
+                    accepted=[],
+                    explanation="Sorulara gereksiz uzatmadan doğrudan yanıt verip bir detay ekleyin.",
+                    trick_tip="Konuşurken tek kelimelik 'Yes/No' yerine 'Certainly', 'In most instances' gibi bağlaçlar kullanın."
+                )
+            # Part 2 Cue Card
+            p2 = new_exam.get("part_2", {})
+            database.save_single_question_record(
+                q_id=f"{q_id}_p2",
+                mode=req.mode,
+                module="Speaking",
+                source=f"AI Speaking - {new_exam.get('title', 'Speaking Exam')} (Part 2 Cue Card)",
+                passage_or_script="1 dakika hazırlık, 2 dakika konuşma",
+                prompt=p2.get("cue_card", ""),
+                q_type="Part 2 (Cue Card)",
+                options=[],
+                answer="2 dakikalık C1-C2 monolog",
+                accepted=[],
+                explanation="Karttaki 4 alt başlığın tamamını kapsayarak konuşun.",
+                trick_tip="Zamanı yönetmek için geçmiş, şimdiki durum ve geleceğe dair birer cümleyle hikayeleştirin."
+            )
+            # Part 3
+            for idx, q_txt in enumerate(new_exam.get("part_3", {}).get("questions", [])):
+                database.save_single_question_record(
+                    q_id=f"{q_id}_p3_{idx+1}",
+                    mode=req.mode,
+                    module="Speaking",
+                    source=f"AI Speaking - {new_exam.get('title', 'Speaking Exam')} (Part 3)",
+                    passage_or_script="Derinlemesine analitik tartışma (4-5 dakika)",
+                    prompt=q_txt,
+                    q_type="Part 3 (Analytical Discussion)",
+                    options=[],
+                    answer="Varsayımsal ve analitik argüman",
+                    accepted=[],
+                    explanation="Kişisel değil, toplumsal ve küresel ölçekte argüman üretin.",
+                    trick_tip="Koşul cümleleri (If societies were to..., then...) kullanarak dil bilginizi gösterin."
+                )
+            return {"success": True, "test_id": q_id, "data": new_exam}
+
         else:
-            raise HTTPException(status_code=400, detail="Module not supported for generation")
+            raise HTTPException(status_code=400, detail="Desteklenmeyen modül")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Sınav üretilemedi: {str(e)}")
 
@@ -248,7 +310,7 @@ async def evaluate_speaking_endpoint(
     part: str = Form("Part 2"),
     mode: str = Form("cyber"),
     prompt_context: str = Form(""),
-    user_email: str = Form("guest@forensync.academy")
+    user_email: str = Form("paem2.donem@gmail.com")
 ):
     suffix = Path(audio.filename or "recording.webm").suffix or ".webm"
     with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp_file:
@@ -347,9 +409,12 @@ async def grade_reading_endpoint(sub: ReadingSubmission):
 
 @app.post("/api/grade/listening")
 async def grade_listening_endpoint(sub: ListeningSubmission):
-    mode_data = EXAM_DATA.get(sub.mode, EXAM_DATA["cyber"])
-    section = mode_data["listening"].get(sub.section_id, mode_data["listening"]["section_1"])
-    questions = section["questions"]
+    if sub.custom_section and "questions" in sub.custom_section:
+        questions = sub.custom_section["questions"]
+    else:
+        mode_data = EXAM_DATA.get(sub.mode, EXAM_DATA["cyber"])
+        section = mode_data["listening"].get(sub.section_id, mode_data["listening"]["section_1"])
+        questions = section["questions"]
 
     correct_count = 0
     total_q = len(questions)

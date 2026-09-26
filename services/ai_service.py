@@ -12,7 +12,13 @@ load_dotenv()
 API_KEY = os.environ.get("GEMINI_API_KEY")
 client = genai.Client(api_key=API_KEY)
 
-PRIMARY_MODELS = ["gemini-3.5-flash", "gemini-3.8-flash"]
+PRIMARY_MODELS = [
+    "gemini-3.8-flash",
+    "gemini-3.5-flash-lite",
+    "gemini-3.7-flash",
+    "gemini-3.6-flash",
+    "gemini-3.5-flash"
+]
 TTS_MODEL = "gemini-3.8-flash-tts"
 
 AUDIO_CACHE_DIR = Path("static/audio")
@@ -253,6 +259,100 @@ Return ONLY valid JSON:
   "prompt": "Official IELTS prompt statement...",
   "min_words": {150 if 'Task 1' in task_type else 250},
   "key_vocabulary_tips": ["word1", "word2", "word3"]
+}}
+"""
+    raw_text = generate_text_with_fallback(prompt)
+    clean_json = re.sub(r'^```json\s*', '', raw_text.strip(), flags=re.MULTILINE)
+    clean_json = re.sub(r'```$', '', clean_json.strip(), flags=re.MULTILINE)
+    return json.loads(clean_json)
+
+def generate_dynamic_listening_test(mode: str = "cyber") -> Dict[str, Any]:
+    """Generates a brand new Cambridge Listening section with audio script + 4 questions in JSON."""
+    is_cyber = (mode == "cyber")
+    topic_hint = "Ransomware negotiation, forensic incident response triage, or cryptographic token handling" if is_cyber else "University library registration, community sports facility booking, or public transport inquiry"
+
+    prompt = f"""
+You are a Cambridge IELTS Senior Listening Examination Designer.
+Generate a BRAND-NEW, HIGH-QUALITY IELTS Listening Section (Section 1 dialogue or Section 2 presentation).
+Target Band: 7.5 - 8.5.
+Theme: {topic_hint}.
+
+Strict Requirements:
+1. 'audio_script': Authentic English dialogue or talk between 2 people (or speaker delivering guidance), 180-260 words. Include clear factual information (names, numbers, dates, locations, prices, technical codes) and authentic Cambridge distractors (e.g. self-correction).
+2. 'intro': 1-2 sentence context introduction.
+3. 4 fill-in-the-blank questions (or note completion) matching specific information in the dialogue.
+4. For each question:
+   - 'id': 'lq1', 'lq2', etc.
+   - 'prompt': The sentence with a blank '______'
+   - 'type': 'fill'
+   - 'answer': 1-2 words or numbers that fit in the blank
+   - 'accepted': list of accepted casing/spelling variations
+   - 'explanation': Clear explanation in Turkish detailing where in the audio this answer occurs
+   - 'trick_tip': Cambridge listening distractor trap tip in Turkish
+
+Return ONLY valid JSON:
+{{
+  "title": "Section 1: ...",
+  "intro": "You will hear...",
+  "audio_script": "Officer: ...\\nCaller: ...",
+  "questions": [
+    {{
+      "id": "lq1",
+      "type": "fill",
+      "prompt": "1. Reference ID: ______",
+      "answer": "...",
+      "accepted": ["..."],
+      "explanation": "...",
+      "trick_tip": "..."
+    }}
+  ]
+}}
+"""
+    raw_text = generate_text_with_fallback(prompt)
+    clean_json = re.sub(r'^```json\s*', '', raw_text.strip(), flags=re.MULTILINE)
+    clean_json = re.sub(r'```$', '', clean_json.strip(), flags=re.MULTILINE)
+    return json.loads(clean_json)
+
+def generate_dynamic_speaking_test(mode: str = "cyber") -> Dict[str, Any]:
+    """Generates a brand new Speaking test with Part 1, Part 2 Cue Card, and Part 3."""
+    is_cyber = (mode == "cyber")
+    topic_hint = "Cyber defense operations, AI forensics, cryptographic privacy" if is_cyber else "Urban development, technological changes, international cultural exchange"
+
+    prompt = f"""
+You are a Cambridge IELTS Chief Speaking Examiner.
+Generate a BRAND-NEW, COMPLETE IELTS Speaking Exam.
+Domain: {'Forensic Computing / Jean Monnet' if is_cyber else 'Cambridge Academic'}.
+Theme: {topic_hint}.
+
+Return ONLY valid JSON:
+{{
+  "title": "IELTS Speaking Examination - {topic_hint}",
+  "part_1": {{
+    "title": "Part 1: Introduction & Specialization",
+    "questions": [
+      "Can you describe your background in this field?",
+      "What is the most significant technological challenge you face daily?",
+      "How do you foresee your specialization evolving over the next decade?"
+    ]
+  }},
+  "part_2": {{
+    "title": "Part 2: Cue Card (Long Turn)",
+    "cue_card": "Describe a significant challenge or breakthrough in your domain.\\n\\nYou should say:\\n• What the nature of the situation was\\n• What methodologies or tools were used to address it\\n• What complications or obstacles occurred\\nAnd explain what profound insight you derived from this experience.",
+    "prep_time": 60,
+    "speak_time": 120
+  }},
+  "part_3": {{
+    "title": "Part 3: In-Depth Analytical Discussion",
+    "questions": [
+      "How does international regulatory disparity impact cross-border investigations and policy?",
+      "To what extent will automated artificial intelligence render traditional human expertise obsolete?",
+      "What ethical balances must modern societies strike between public security and individual privacy rights?"
+    ]
+  }},
+  "examiner_tips": [
+    "Use varied cohesive devices and idiomatic phrases.",
+    "Avoid simple monolithic statements; structure your answers using thesis-antithesis."
+  ]
 }}
 """
     raw_text = generate_text_with_fallback(prompt)

@@ -1,5 +1,5 @@
 # ==========================================
-# ForenSync Academy - Oracle Cloud Deployment Script
+# IELTS Master Prep - Oracle Cloud Deployment Script
 # Tek tıkla Oracle Cloud sunucusunu günceller
 # ==========================================
 Write-Host "🚀 Oracle Cloud sunucusuna bağlanılıyor ve güncellemeler çekiliyor..." -ForegroundColor Cyan
