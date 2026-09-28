@@ -93,7 +93,12 @@ async def serve_index():
     if not index_file.exists():
         raise HTTPException(status_code=404, detail="Index template not found")
     with open(index_file, "r", encoding="utf-8") as f:
-        return f.read()
+        content = f.read()
+    response = HTMLResponse(content=content)
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
 
 # Auth & User Profile
 @app.post("/api/auth/login")

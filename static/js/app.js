@@ -52,20 +52,21 @@ const state = {
 
 // Robust Application Launcher (executes regardless of DOMContentLoaded timing)
 function startApp() {
-  initAuthUI();
-  initNavigation();
-  initModeSwitcher();
-  initTimers();
-  initWritingModule();
-  initSpeakingRecorder();
-  initDynamicGenerators();
-  initQuestionBankEvents();
+  try { initAuthUI(); } catch (e) { console.error('AuthUI error:', e); }
+  try { initNavigation(); } catch (e) { console.error('Navigation error:', e); }
+  try { initModeSwitcher(); } catch (e) { console.error('ModeSwitcher error:', e); }
+  try { initTimers(); } catch (e) { console.error('Timers error:', e); }
+  try { initWritingModule(); } catch (e) { console.error('WritingModule error:', e); }
+  try { initSpeakingRecorder(); } catch (e) { console.error('SpeakingRecorder error:', e); }
+  try { initDynamicGenerators(); } catch (e) { console.error('DynamicGenerators error:', e); }
+  try { initQuestionBankEvents(); } catch (e) { console.error('QuestionBankEvents error:', e); }
+  try { initReadingMobileToggle(); } catch (e) { console.error('ReadingMobileToggle error:', e); }
   
   // Initial load
-  switchMode('cyber');
-  loadAnalytics();
-  loadTricks();
-  loadMistakes();
+  try { switchMode('cyber'); } catch (e) { console.error('switchMode error:', e); }
+  try { loadAnalytics(); } catch (e) { console.error('loadAnalytics error:', e); }
+  try { loadTricks(); } catch (e) { console.error('loadTricks error:', e); }
+  try { loadMistakes(); } catch (e) { console.error('loadMistakes error:', e); }
 }
 
 if (document.readyState === 'loading') {
@@ -139,9 +140,21 @@ function initNavigation() {
   const navButtons = document.querySelectorAll('[data-module-target]');
   
   navButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
+    const handleNav = (e) => {
       const target = btn.getAttribute('data-module-target');
-      switchModule(target);
+      if (target) switchModule(target);
+    };
+
+    btn.addEventListener('click', handleNav);
+
+    let moved = false;
+    btn.addEventListener('touchstart', () => { moved = false; }, { passive: true });
+    btn.addEventListener('touchmove', () => { moved = true; }, { passive: true });
+    btn.addEventListener('touchend', (e) => {
+      if (!moved) {
+        e.preventDefault();
+        handleNav(e);
+      }
     });
   });
 }
@@ -176,8 +189,26 @@ function initModeSwitcher() {
   const cyberBtn = document.getElementById('btn-mode-cyber');
   const acadBtn = document.getElementById('btn-mode-academic');
 
-  cyberBtn.addEventListener('click', () => switchMode('cyber'));
-  acadBtn.addEventListener('click', () => switchMode('academic'));
+  function bindMode(btn, mode) {
+    if (!btn) return;
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      switchMode(mode);
+    });
+
+    let moved = false;
+    btn.addEventListener('touchstart', () => { moved = false; }, { passive: true });
+    btn.addEventListener('touchmove', () => { moved = true; }, { passive: true });
+    btn.addEventListener('touchend', (e) => {
+      if (!moved) {
+        e.preventDefault();
+        switchMode(mode);
+      }
+    });
+  }
+
+  bindMode(cyberBtn, 'cyber');
+  bindMode(acadBtn, 'academic');
 }
 
 async function switchMode(mode) {
@@ -415,6 +446,50 @@ function renderReadingQuestions(questions) {
 
     qContainer.appendChild(qDiv);
   });
+}
+
+/* ================= Reading Mobile Toggle ================= */
+function initReadingMobileToggle() {
+  const btnPassage = document.getElementById('mobile-toggle-passage');
+  const btnQuestions = document.getElementById('mobile-toggle-questions');
+  const colPassage = document.getElementById('reading-passage-column');
+  const colQuestions = document.getElementById('reading-questions-column');
+
+  if (!btnPassage || !btnQuestions || !colPassage || !colQuestions) return;
+
+  function showPassage() {
+    btnPassage.classList.add('active');
+    btnQuestions.classList.remove('active');
+    colPassage.classList.remove('mobile-hidden');
+    colQuestions.classList.add('mobile-hidden');
+  }
+
+  function showQuestions() {
+    btnQuestions.classList.add('active');
+    btnPassage.classList.remove('active');
+    colQuestions.classList.remove('mobile-hidden');
+    colPassage.classList.add('mobile-hidden');
+  }
+
+  function bindToggle(btn, action) {
+    btn.addEventListener('click', action);
+    let moved = false;
+    btn.addEventListener('touchstart', () => { moved = false; }, { passive: true });
+    btn.addEventListener('touchmove', () => { moved = true; }, { passive: true });
+    btn.addEventListener('touchend', (e) => {
+      if (!moved) {
+        e.preventDefault();
+        action();
+      }
+    });
+  }
+
+  bindToggle(btnPassage, showPassage);
+  bindToggle(btnQuestions, showQuestions);
+
+  if (window.innerWidth < 992) {
+    showPassage();
+  }
 }
 
 // Grade Reading
@@ -699,32 +774,46 @@ function initWritingModule() {
   const btnTask2 = document.getElementById('btn-writing-task2');
   const essayInput = document.getElementById('essay-input');
 
-  btnTask1.addEventListener('click', () => {
-    currentWritingTask = 'Task 1';
-    btnTask1.classList.add('active');
-    btnTask2.classList.remove('active');
-    renderWritingModule();
-  });
+  function bindTask(btn, taskName, otherBtn) {
+    if (!btn) return;
+    const selectTask = () => {
+      currentWritingTask = taskName;
+      btn.classList.add('active');
+      if (otherBtn) otherBtn.classList.remove('active');
+      renderWritingModule();
+    };
+    btn.addEventListener('click', selectTask);
+    let moved = false;
+    btn.addEventListener('touchstart', () => { moved = false; }, { passive: true });
+    btn.addEventListener('touchmove', () => { moved = true; }, { passive: true });
+    btn.addEventListener('touchend', (e) => {
+      if (!moved) {
+        e.preventDefault();
+        selectTask();
+      }
+    });
+  }
 
-  btnTask2.addEventListener('click', () => {
-    currentWritingTask = 'Task 2';
-    btnTask2.classList.add('active');
-    btnTask1.classList.remove('active');
-    renderWritingModule();
-  });
+  bindTask(btnTask1, 'Task 1', btnTask2);
+  bindTask(btnTask2, 'Task 2', btnTask1);
 
-  essayInput.addEventListener('input', () => {
-    const text = essayInput.value.trim();
-    const words = text ? text.split(/\s+/).length : 0;
-    const minWords = currentWritingTask === 'Task 1' ? 150 : 250;
+  if (essayInput) {
+    essayInput.addEventListener('input', () => {
+      const text = essayInput.value.trim();
+      const words = text ? text.split(/\s+/).length : 0;
+      const minWords = currentWritingTask === 'Task 1' ? 150 : 250;
 
-    const countElem = document.getElementById('writing-word-count');
-    countElem.textContent = `${words} / ${minWords} words`;
-    countElem.style.color = (words >= minWords) ? 'var(--accent-emerald)' : 'var(--text-muted)';
-  });
+      const countElem = document.getElementById('writing-word-count');
+      if (countElem) {
+        countElem.textContent = `${words} / ${minWords} words`;
+        countElem.style.color = (words >= minWords) ? 'var(--accent-emerald)' : 'var(--text-muted)';
+      }
+    });
+  }
 
   const submitWritingBtn = document.getElementById('btn-submit-writing');
-  submitWritingBtn.addEventListener('click', async () => {
+  if (submitWritingBtn) {
+    submitWritingBtn.addEventListener('click', async () => {
     const essayText = essayInput.value;
     const promptCtx = document.getElementById('writing-prompt-text').textContent;
 
@@ -772,6 +861,7 @@ function initWritingModule() {
       submitWritingBtn.innerHTML = '🚀 Submit to AI Examiner';
     }
   });
+  }
 }
 
 function renderWritingModule() {
